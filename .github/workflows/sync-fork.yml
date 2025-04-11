@@ -3,19 +3,27 @@ name: Sync to Fork Repository
 on:
   push:
     branches:
-      - main # 필요 시 사용 중인 브랜치 이름으로 수정하세요!
+      - main # 사용 중인 브랜치 이름 맞게
 
 jobs:
   sync:
     runs-on: ubuntu-latest
+    env:
+      TOKEN: ${{ secrets.FORK_TOKEN }} # ✅ 전체 env 로 TOKEN 선언
 
     steps:
       - name: Checkout source repository
         uses: actions/checkout@v4
 
-      - name: Push to forked repository
+      - name: Set up Git credentials
         run: |
           git config --global user.name "GitHub Action"
           git config --global user.email "actions@github.com"
-          git remote add fork https://${{ secrets.FORK_TOKEN }}@github.com/junesung1004/fit-fe.git
+
+      - name: Add fork remote
+        run: |
+          git remote add fork https://$TOKEN@github.com/junesung1004/fit-fe.git
+
+      - name: Push to fork
+        run: |
           git push fork main --force

@@ -1,0 +1,30 @@
+name: Deploy to Vercel via Personal Repo
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout source repository
+        uses: actions/checkout@v2
+
+      - name: Make output directory
+        run: |
+          chmod +x ./build.sh
+          ./build.sh
+
+      - name: Push to personal repository
+        uses: cpina/github-action-push-to-another-repository@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.MY_TOKEN }}
+        with:
+          source-directory: 'output'
+          destination-github-username: junesung1004 # ✅ 내 깃허브 username
+          destination-repository-name: fit-fe # ✅ 내 fork 레포지토리 이름
+          user-email: ${{ secrets.EMAIL }}
+          commit-message: ${{ github.event.head_commit.message }}
+          target-branch: main

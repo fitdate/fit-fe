@@ -3,7 +3,10 @@
 import HomeFristProfileCardList from '@/components/page/home/HomeFirstProfileCardList';
 import HomeTwoProfileCardList from '@/components/page/home/HomeSecondProfileCardList';
 import { DUMMYDATA } from '@/constants/homeDummyData';
-import { useTodayDatingMatchMutation } from '@/hooks/mutation/useTodayDatingMatchMutation';
+import {
+  usePublicTodayDatingMatchMutation,
+  useTodayDatingMatchMutation,
+} from '@/hooks/mutation/useTodayDatingMatchMutation';
 import { UserDataType } from '@/types/homePage.type';
 import React, { useEffect, useState } from 'react';
 
@@ -13,8 +16,11 @@ export default function HomeWrapper() {
   const [thirdUser, setThirdUser] = useState<UserDataType | null>(null);
   const [fourUser, setFourUser] = useState<UserDataType | null>(null);
   const { mutate: todayDatingUser } = useTodayDatingMatchMutation();
+  const { mutate: publicTodayDatingUser } = usePublicTodayDatingMatchMutation();
   const [data, setData] = useState([]);
   console.log('data :', data);
+  const [publicData, setPublicData] = useState([]);
+  console.log('publicData :', publicData);
 
   const getTodayDatingUserMatch = async () => {
     todayDatingUser(undefined, {
@@ -28,8 +34,21 @@ export default function HomeWrapper() {
     });
   };
 
+  const getPublicTodayDatingUserMatch = async () => {
+    publicTodayDatingUser(undefined, {
+      onSuccess: (data) => {
+        // 여기서 data 배열을 설정
+        setPublicData(data);
+      },
+      onError: (err) => {
+        console.error('❌ 매칭 데이터 가져오기 실패', err);
+      },
+    });
+  };
+
   useEffect(() => {
     getTodayDatingUserMatch();
+    getPublicTodayDatingUserMatch();
     // setFirstUser(res[0]);
     // setTwoUser(res[1]);
     // setThirdUser(res[2]);

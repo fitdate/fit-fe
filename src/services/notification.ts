@@ -10,7 +10,6 @@ export interface Notification {
 }
 
 export interface NotificationPayload {
-  senderId: number;
   receiverId: number;
   type: string;
   title: string;
@@ -29,7 +28,9 @@ export const fetchNotifications = async (): Promise<Notification[]> => {
 };
 
 // 알림 전송
-export const sendNotification = async (notificationPayload: NotificationPayload) => {
+export const sendNotification = async (
+  notificationPayload: NotificationPayload
+) => {
   try {
     const response = await instance.post('/notification', notificationPayload);
     return response.data;
@@ -62,9 +63,14 @@ export const deleteAllNotifications = async () => {
 };
 
 // 실시간 알림 받기 (SSE)
-// eslint-disable-next-line no-unused-vars
-export const listenToRealTimeNotifications = (callback: (notification: Notification) => void) => {
-  const eventSource = new EventSource('https://api.fit-date.co.kr/api/v1/notification/events');
+ 
+export const listenToRealTimeNotifications = (
+  // eslint-disable-next-line no-unused-vars
+  callback: (notification: Notification) => void
+) => {
+  const eventSource = new EventSource(
+    'https://api.fit-date.co.kr/api/v1/notification/events'
+  );
 
   eventSource.onmessage = (event) => {
     const notification = JSON.parse(event.data);

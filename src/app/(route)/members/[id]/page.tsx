@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { HeartIcon } from '@heroicons/react/24/solid';
 import MemberProfileDetailCard from '@/components/common/ProfileDetailCard';
-import { sendNotification } from '@/services/notification';  // NotificationService import
+import { sendNotification } from '@/services/notification'; // NotificationService import
 import { likeMember } from '@/services/like';
 
 const dummyData = [
@@ -35,7 +35,6 @@ export default function MemberDetailPage() {
         await likeMember(receiverId);
         // 좋아요 알림 전송
         const notificationPayload = {
-          senderId,
           receiverId,
           type: 'LIKE',
           title: '좋아요 알림',
@@ -55,10 +54,12 @@ export default function MemberDetailPage() {
     }
   };
 
-  const handleDatingChatRequest = async (senderId: number, receiverId: number) => {
+  const handleDatingChatRequest = async (
+    senderId: number,
+    receiverId: number
+  ) => {
     try {
       const notificationPayload = {
-        senderId,
         receiverId,
         type: 'COFFEE_CHAT',
         title: '커피챗 신청',

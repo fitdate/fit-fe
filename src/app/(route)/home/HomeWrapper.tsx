@@ -60,7 +60,7 @@ export default function HomeWrapper() {
           setFirstUser({ ...user1, matchId });
           setTwoUser({ ...user2, matchId });
         }
-        if (matches.length > 1) {
+        if (matches.length > 0) {
           const { matchId, user1, user2 } = matches[1];
           setThirdUser({ ...user1, matchId });
           setFourUser({ ...user2, matchId });

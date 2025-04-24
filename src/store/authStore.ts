@@ -2,12 +2,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
+interface AuthUser {
+  id: string;
+  nickname: string;
+}
+
 interface AuthState {
   isLoggedIn: boolean;
   accessToken: string | null;
-  userName: string | null; // nickName 저장용
+  user: AuthUser | null;
   // eslint-disable-next-line no-unused-vars
-  login: (token: string, nickName: string) => void;
+  login: (token: string, user: AuthUser) => void;
   logout: () => void;
 }
 
@@ -16,25 +21,25 @@ export const useAuthStore = create<AuthState>()(
     (set) => ({
       isLoggedIn: false,
       accessToken: null,
-      userName: null,
+      user: null,
 
       // ✅ 여기서 실제로 인자를 사용해서 상태에 반영
-      login: (token, nickName) =>
+      login: (token, user) =>
         set({
           isLoggedIn: true,
           accessToken: token,
-          userName: nickName, // ← nickName 저장
+          user: user,
         }),
 
       logout: () =>
         set({
           isLoggedIn: false,
           accessToken: null,
-          userName: null,
+          user: null,
         }),
     }),
     {
-      name: 'auth-storage', // localStorage 키 이름
+      name: 'auth-storage',
     }
   )
 );

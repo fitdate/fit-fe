@@ -5,8 +5,10 @@ import HomeTwoProfileCardList from '@/components/page/home/HomeSecondProfileCard
 // import { DUMMYDATA } from '@/constants/homeDummyData';
 import {
   usePublicTodayDatingMatchMutation,
+  useTodayDatingMatchMutation,
   // useTodayDatingMatchMutation,
 } from '@/hooks/mutation/useTodayDatingMatchMutation';
+import { useAuthStore } from '@/store/authStore';
 import { UserDataType } from '@/types/homePage.type';
 import React, { useEffect, useState } from 'react';
 
@@ -16,27 +18,28 @@ export default function HomeWrapper() {
   //console.log('firstUser :', firstUser);
   const [thirdUser, setThirdUser] = useState<UserDataType | null>(null);
   const [fourUser, setFourUser] = useState<UserDataType | null>(null);
-  // const { mutate: todayDatingUser } = useTodayDatingMatchMutation();
+  const { mutate: todayDatingUser } = useTodayDatingMatchMutation();
   const { mutate: publicTodayDatingUser } = usePublicTodayDatingMatchMutation();
-  // const [data, setData] = useState([]);
-  //console.log('data :', data);
+  const [data, setData] = useState([]);
+  console.log('data :', data);
+  const { isLoggedIn } = useAuthStore();
   const [publicData, setPublicData] = useState<{
     matches: { user1: UserDataType; user2: UserDataType }[];
   }>({
     matches: [],
   });
 
-  // const getTodayDatingUserMatch = async () => {
-  //   todayDatingUser(undefined, {
-  //     onSuccess: (data) => {
-  //       // 여기서 data 배열을 설정
-  //       setData(data);
-  //     },
-  //     onError: (err) => {
-  //       console.error('❌ 매칭 데이터 가져오기 실패', err);
-  //     },
-  //   });
-  // };
+  const getTodayDatingUserMatch = async () => {
+    todayDatingUser(undefined, {
+      onSuccess: (data) => {
+        // 여기서 data 배열을 설정
+        setData(data);
+      },
+      onError: (err) => {
+        console.error('❌ 매칭 데이터 가져오기 실패', err);
+      },
+    });
+  };
 
   const getPublicTodayDatingUserMatch = async () => {
     publicTodayDatingUser(undefined, {
@@ -51,13 +54,12 @@ export default function HomeWrapper() {
   };
 
   useEffect(() => {
-    // getTodayDatingUserMatch();
-    getPublicTodayDatingUserMatch();
-    // setFirstUser(res[0]);
-    // setTwoUser(res[1]);
-    // setThirdUser(res[2]);
-    // setFourUser(res[3]);
-  }, []);
+    if (isLoggedIn) {
+      getTodayDatingUserMatch(); // 🔐 로그인 유저용 API
+    } else {
+      getPublicTodayDatingUserMatch(); // 🌐 비로그인 유저용 API
+    }
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (publicData?.matches?.length > 0) {

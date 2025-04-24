@@ -10,18 +10,69 @@ export default function FriendsPage() {
   const router = useRouter();
 
   const dummyProfiles = [
-    { id: 1, name: '친구 1', age: 20, region: '경기', likes: 3, profileImageUrl: '/seo.jpg' },
-    { id: 2, name: '친구 2', age: 21, region: '서울', likes: 5, profileImageUrl: '/seo.jpg' },
-    { id: 3, name: '친구 3', age: 22, region: '서울', likes: 2, profileImageUrl: '/seo.jpg' },
-    { id: 4, name: '친구 4', age: 23, region: '서울', likes: 1, profileImageUrl: '/seo.jpg' },
-    { id: 5, name: '친구 5', age: 24, region: '서울', likes: 6, profileImageUrl: '/seo.jpg' },
-    { id: 6, name: '친구 6', age: 25, region: '서울', likes: 4, profileImageUrl: '/seo.jpg' },
-    { id: 7, name: '친구 7', age: 25, region: '서울', likes: 7, profileImageUrl: '/seo.jpg' },
+    {
+      id: 1,
+      name: '친구 1',
+      age: 20,
+      region: '경기',
+      likes: 3,
+      profileImageUrl: '/seo.jpg',
+    },
+    {
+      id: 2,
+      name: '친구 2',
+      age: 21,
+      region: '서울',
+      likes: 5,
+      profileImageUrl: '/seo.jpg',
+    },
+    {
+      id: 3,
+      name: '친구 3',
+      age: 22,
+      region: '서울',
+      likes: 2,
+      profileImageUrl: '/seo.jpg',
+    },
+    {
+      id: 4,
+      name: '친구 4',
+      age: 23,
+      region: '서울',
+      likes: 1,
+      profileImageUrl: '/seo.jpg',
+    },
+    {
+      id: 5,
+      name: '친구 5',
+      age: 24,
+      region: '서울',
+      likes: 6,
+      profileImageUrl: '/seo.jpg',
+    },
+    {
+      id: 6,
+      name: '친구 6',
+      age: 25,
+      region: '서울',
+      likes: 4,
+      profileImageUrl: '/seo.jpg',
+    },
+    {
+      id: 7,
+      name: '친구 7',
+      age: 25,
+      region: '서울',
+      likes: 7,
+      profileImageUrl: '/seo.jpg',
+    },
   ];
 
   const [roundProfiles, setRoundProfiles] = useState(dummyProfiles.slice(0, 3));
   const [likeProfiles, setLikeProfiles] = useState(dummyProfiles.slice(0, 3));
-  const [coffeeChatProfiles, setCoffeeChatProfiles] = useState(dummyProfiles.slice(0, 2));
+  const [coffeeChatProfiles, setCoffeeChatProfiles] = useState(
+    dummyProfiles.slice(0, 2)
+  );
   const [isRoundExpanded, setIsRoundExpanded] = useState(false);
   const [isLikeExpanded, setIsLikeExpanded] = useState(false);
   const [isCoffeeChatExpanded, setIsCoffeeChatExpanded] = useState(false);
@@ -35,7 +86,7 @@ export default function FriendsPage() {
   };
 
   const handleReject = (id: number) => {
-    setRoundProfiles(roundProfiles.filter(profile => profile.id !== id));
+    setRoundProfiles(roundProfiles.filter((profile) => profile.id !== id));
   };
 
   const renderRoundProfileCards = (profiles: typeof dummyProfiles) => (
@@ -59,7 +110,10 @@ export default function FriendsPage() {
   const renderLikeProfileCards = (profiles: typeof dummyProfiles) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-2">
       {profiles.map((profile) => (
-        <div key={profile.id} onClick={() => handleClickMemberDetailMove(profile.id)}>
+        <div
+          key={profile.id}
+          onClick={() => handleClickMemberDetailMove(profile.id)}
+        >
           <ProfileCard
             name={profile.name}
             age={profile.age}
@@ -76,7 +130,10 @@ export default function FriendsPage() {
   const renderCoffeeChatProfileCards = (profiles: typeof dummyProfiles) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-2">
       {profiles.map((profile) => (
-        <div key={profile.id} onClick={() => handleClickMemberDetailMove(profile.id)}>
+        <div
+          key={profile.id}
+          onClick={() => handleClickMemberDetailMove(profile.id)}
+        >
           <ProfileCard
             name={profile.name}
             age={profile.age}
@@ -104,7 +161,6 @@ export default function FriendsPage() {
           <Button
             className="w-full mt-2"
             variant="fill"
-            
             onClick={() => {
               setRoundProfiles(dummyProfiles);
               setIsRoundExpanded(true);
@@ -116,7 +172,6 @@ export default function FriendsPage() {
           <Button
             className="w-full mt-2"
             variant="outline"
-            
             onClick={() => {
               setRoundProfiles(dummyProfiles.slice(0, 3));
               setIsRoundExpanded(false);
@@ -131,7 +186,7 @@ export default function FriendsPage() {
       <section>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-semibold text-lg">호감 표시</h2>
-          <Button size="sm" variant="outline"  className="text-xs">
+          <Button size="sm" variant="outline" className="text-xs">
             ✏️ 편집
           </Button>
         </div>
@@ -169,7 +224,7 @@ export default function FriendsPage() {
       <section>
         <div className="flex justify-between items-center mb-2">
           <h2 className="font-semibold text-lg">커피챗 신청</h2>
-          <Button size="sm" variant="outline"  className="text-xs">
+          <Button size="sm" variant="outline" className="text-xs">
             ✏️ 편집
           </Button>
         </div>

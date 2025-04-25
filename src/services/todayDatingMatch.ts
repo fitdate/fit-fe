@@ -56,8 +56,6 @@ export const selectMatchUser = async (payload: SelectMatchPayload) => {
   }
 };
 
-
-
 //모두 선택하기 api
 export const selectAllMatchUser = async (payload: SelectAllMatchPayload) => {
   try {

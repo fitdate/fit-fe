@@ -111,7 +111,7 @@ export default function FriendsPage() {
             age={getKoreanAge(profile.birthday)}
             region={profile.region}
             likes={profile.likeCount}
-            profileImageUrl={profile.profileImageUrl}
+            profileImageUrl={profile.profileImageUrl ?? "/default.png"}
             onAccept={() => onAccept(profile.id)}
             onReject={() => onReject(profile.id)}
             onClick={() => handleClickMemberDetailMove(profile.id)}
@@ -124,7 +124,7 @@ export default function FriendsPage() {
               region={profile.region}
               likes={profile.likeCount}
               isOnline={true}
-              profileImageUrl={profile.profileImageUrl}
+              profileImageUrl={profile.profileImageUrl ?? "/default.png"}
             />
           </div>
         )

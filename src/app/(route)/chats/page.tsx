@@ -23,7 +23,7 @@ interface ChatRoomType {
 
 export default function ChatsPage() {
   const { data, isError, isPending } = useGetChatRoomQuery();
-  console.log('chatlist-data : ', data);
+  console.log('chatlist-data.. : ', data);
 
   if (isError) {
     return <div>error...</div>;

@@ -17,9 +17,9 @@ interface Partner {
 }
 
 interface ChatPageProps {
-  roomId: string;
+  params: string;
 }
-export default function ChatPage({ roomId }: ChatPageProps) {
+export default function ChatPage({ params }: ChatPageProps) {
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -30,7 +30,7 @@ export default function ChatPage({ roomId }: ChatPageProps) {
     const fetchChatData = async () => {
       try {
         const { chatRoomId, partner, messages } =
-          await getChatMessageData(roomId);
+          await getChatMessageData(params);
         setChatRoomId(chatRoomId);
         setUserId(partner.id); // ✅ 서버가 나 말고 상대를 partner로 주는 경우엔 따로 처리해야 함
         setPartner(partner);

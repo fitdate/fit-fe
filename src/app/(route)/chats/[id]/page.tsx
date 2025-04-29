@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import ChatRoom from '@/components/page/chats/ChatRoom';
 import { getChatMessageData } from '@/services/chat';
-import { useParams } from 'next/navigation';
 
 interface Message {
   content: string;
@@ -17,15 +16,15 @@ interface Partner {
   profileImage: string;
 }
 
-export default function ChatPage() {
+interface ChatPageProps {
+  roomId: string;
+}
+export default function ChatPage({ roomId }: ChatPageProps) {
   const [chatRoomId, setChatRoomId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [partner, setPartner] = useState<Partner | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const params = useParams();
-  const { roomId } = params as { roomId: string };
 
   useEffect(() => {
     const fetchChatData = async () => {

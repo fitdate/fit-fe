@@ -2,6 +2,8 @@
 
 import { useChat } from '@/hooks/customs/useChat';
 import { useState, useRef, useEffect } from 'react';
+import Spinner from '@/components/common/Spinner';
+import Image from 'next/image';
 
 interface Message {
   content: string;
@@ -26,10 +28,8 @@ const ChatRoom = ({ chatRoomId, userId }: ChatRoomProps) => {
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { messages, partner, sendMessage, isConnected } = useChat(
-    chatRoomId,
-    userId
-  );
+  const { messages, partner, sendMessage, isConnected, isLoading, error } =
+    useChat(chatRoomId, userId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,17 +46,43 @@ const ChatRoom = ({ chatRoomId, userId }: ChatRoomProps) => {
     }
   }, [messages]);
 
+  if (isLoading) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center gap-4">
+        <div className="text-red-500">{error.message}</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-rose-500 text-white rounded-lg hover:bg-rose-600"
+        >
+          다시 시도
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full bg-white">
       {/* ✅ 상단 헤더 */}
       <div className="flex items-center gap-3 p-4 border-b bg-gray-50">
         {partner && (
           <>
-            <img
-              src={partner.profileImage}
-              alt="상대 프로필"
-              className="w-10 h-10 rounded-full object-cover"
-            />
+            <div className="relative w-10 h-10">
+              <Image
+                src={partner.profileImage}
+                alt="상대 프로필"
+                fill
+                className="rounded-full object-cover"
+                sizes="40px"
+              />
+            </div>
             <span className="text-sm font-medium text-gray-700">
               상대방 ID: {partner.id.slice(0, 6)}...
             </span>

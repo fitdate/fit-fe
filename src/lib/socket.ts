@@ -1,56 +1,79 @@
-// lib/socket.ts
-import { io, Socket } from 'socket.io-client';
+import io from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
 
-const socketService = {
-  socket: null as Socket | null,
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-explicit-any
-  messageHandlers: [] as ((message: any) => void)[],
+export interface SocketMessage {
+  content: string;
+  userId: string;
+  chatRoomId: string;
+}
 
-  connect: () => {
-    if (!socketService.socket) {
-      socketService.socket = io('http://localhost:3000', {
-        transports: ['websocket'],
-        autoConnect: true,
-      });
+interface SocketHandler {
+  (): void;
+}
 
-      socketService.socket.on('connect', () => {
-        console.log('채팅 서버 연결됨');
-      });
+class SocketService {
+  public socket: typeof Socket | null = null;
+  private messageHandlers: Set<SocketHandler> = new Set();
 
-      socketService.socket.on('message', (message) => {
-        socketService.messageHandlers.forEach((handler) => handler(message));
-      });
+  connect() {
+    if (!this.socket) {
+      try {
+        this.socket = io('http://localhost:3000', {
+          transports: ['websocket'],
+          autoConnect: true,
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+        });
+
+        this.socket.on('connect', () => {
+          console.log('채팅 서버 연결됨');
+        });
+
+        this.socket.on('connect_error', (error: Error) => {
+          console.error('연결 에러:', error);
+        });
+
+        this.socket.on('error', (error: Error) => {
+          console.error('소켓 에러:', error);
+        });
+
+        this.socket.on('message', (message: SocketMessage) => {
+          console.log('메시지 수신:', message);
+          this.messageHandlers.forEach((handler) => handler(message));
+        });
+      } catch (error) {
+        console.error('소켓 초기화 실패:', error);
+      }
     }
-  },
+  }
 
-  joinRoom: (chatRoomId: string, userId: string) => {
-    if (socketService.socket) {
-      socketService.socket.emit('join', { chatRoomId, userId });
+  joinRoom(chatRoomId: string, userId: string) {
+    if (this.socket) {
+      this.socket.emit('join', { chatRoomId, userId });
     }
-  },
+  }
 
-  sendMessage: (content: string, userId: string, chatRoomId: string) => {
-    if (socketService.socket) {
-      socketService.socket.emit('message', { content, userId, chatRoomId });
+  sendMessage(content: string, userId: string, chatRoomId: string) {
+    if (this.socket) {
+      this.socket.emit('message', { content, userId, chatRoomId });
     }
-  },
+  }
 
-  // eslint-disable-next-line no-unused-vars, @typescript-eslint/no-explicit-any
-  onMessage: (handler: (message: any) => void) => {
-    socketService.messageHandlers.push(handler);
+  onMessage(handler: SocketHandler) {
+    this.messageHandlers.add(handler);
     return () => {
-      socketService.messageHandlers = socketService.messageHandlers.filter(
-        (h) => h !== handler
-      );
+      this.messageHandlers.delete(handler);
     };
-  },
+  }
 
-  disconnect: () => {
-    if (socketService.socket) {
-      socketService.socket.disconnect();
-      socketService.socket = null;
+  disconnect() {
+    if (this.socket) {
+      this.socket.disconnect();
+      this.socket = null;
+      this.messageHandlers.clear();
     }
-  },
-};
+  }
+}
 
-export default socketService;
+export const socketService = new SocketService();

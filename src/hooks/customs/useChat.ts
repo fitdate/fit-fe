@@ -1,23 +1,40 @@
 'use client';
 
-// hooks/useChat.ts
 import { useState, useEffect, useCallback } from 'react';
 import socketService from '@/lib/socket';
+import { getChatMessageData } from '@/services/chat';
 
 interface Message {
   content: string;
   userId: string;
   chatRoomId: string;
-  createdAt: Date;
+  createdAt: string;
+}
+
+interface Partner {
+  id: string;
+  profileImage: string;
 }
 
 export const useChat = (chatRoomId: string, userId: string) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [partner, setPartner] = useState<Partner | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    socketService.connect();
+    const init = async () => {
+      try {
+        const { messages, partner } = await getChatMessageData(chatRoomId);
+        setMessages(messages);
+        setPartner(partner); // ✅ partner 정보도 상태로 저장
+      } catch (error) {
+        console.error('❌ 과거 메시지 로딩 실패', error);
+      }
+    };
 
+    init();
+
+    socketService.connect();
     const socket = socketService.socket;
 
     if (socket) {
@@ -35,8 +52,8 @@ export const useChat = (chatRoomId: string, userId: string) => {
 
       return () => {
         unsubscribe();
-        socket.off('connect', handleConnect); // ✅ clean-up 추가
-        socket.off('disconnect', handleDisconnect); // ✅ clean-up 추가
+        socket.off('connect', handleConnect);
+        socket.off('disconnect', handleDisconnect);
         socketService.disconnect();
       };
     }
@@ -51,6 +68,7 @@ export const useChat = (chatRoomId: string, userId: string) => {
 
   return {
     messages,
+    partner,
     sendMessage,
     isConnected,
   };

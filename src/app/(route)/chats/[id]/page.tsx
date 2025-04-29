@@ -1,28 +1,58 @@
 'use client';
 
-// pages/chat/[roomId].tsx
-import { useRouter } from 'next/router';
-
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 import ChatRoom from '@/components/page/chats/ChatRoom';
+
+interface TokenPayload {
+  sub: string;
+  role: string;
+  type: string;
+  iat: number;
+  exp: number;
+}
 
 const ChatPage = () => {
   const router = useRouter();
-  const { roomId } = router.query;
+  const params = useParams();
+
+  const [roomId, setRoomId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // ✅ 로딩 상태 추가
 
   useEffect(() => {
-    // 쿠키에서 사용자 정보 가져오기
-    const userInfo = Cookies.get('userInfo');
-    if (userInfo) {
-      const { id } = JSON.parse(userInfo);
-      setUserId(id);
-    } else {
-      // 로그인되지 않은 경우 로그인 페이지로 리다이렉트
+    const accessToken = Cookies.get('accessToken');
+
+    if (!accessToken) {
       router.push('/login');
+      return;
     }
-  }, [router]);
+
+    try {
+      const decoded = jwtDecode<TokenPayload>(accessToken);
+      setUserId(decoded.sub);
+    } catch (error) {
+      console.error('JWT 디코딩 실패:', error);
+      router.push('/login');
+      return;
+    }
+
+    if (params?.roomId && typeof params.roomId === 'string') {
+      setRoomId(params.roomId);
+    }
+
+    setIsLoading(false); // ✅ 모든 준비 완료 후 로딩 끝
+  }, [params, router]);
+
+  if (isLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        로딩 중...
+      </div>
+    );
+  }
 
   if (!userId || !roomId) {
     return null;
@@ -30,7 +60,7 @@ const ChatPage = () => {
 
   return (
     <div className="h-screen">
-      <ChatRoom chatRoomId={roomId as string} userId={userId} />
+      <ChatRoom chatRoomId={roomId} userId={userId} />
     </div>
   );
 };

@@ -43,7 +43,7 @@ export default function ChatPage({ params }: ChatPageProps) {
     };
 
     fetchChatData();
-  }, [roomId]);
+  }, [params]);
 
   if (loading) {
     return (

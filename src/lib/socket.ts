@@ -40,7 +40,7 @@ class SocketService {
 
         this.socket.on('message', (message: SocketMessage) => {
           console.log('메시지 수신:', message);
-          this.messageHandlers.forEach((handler) => handler(message));
+          this.messageHandlers.forEach((handler) => handler());
         });
       } catch (error) {
         console.error('소켓 초기화 실패:', error);

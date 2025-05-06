@@ -335,7 +335,6 @@ export default function SignUpPage() {
           required
           selectedGender={selectedGender}
           error={errors.gender?.message as string}
-          className="mb-4"
         />
 
         {/* 생년월일 필드 */}

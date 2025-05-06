@@ -2,7 +2,7 @@
 
 import React, { FormEvent, useRef } from 'react';
 import Image from 'next/image';
-
+import Button from '@/components/common/Button';
 import { useLoginMutation } from '@/hooks/mutation/useLoginMutation';
 import { LoginProps } from '@/services/login';
 
@@ -39,7 +39,7 @@ export default function LoginPage() {
             type="text"
             placeholder="이메일 또는 아이디"
             ref={emailRef}
-            className="block w-full mb-3 p-4 text-sm border border-rose-500 rounded"
+            className="block w-full mb-2 p-4 text-sm border border-rose-500 rounded"
           />
           <input
             type="password"
@@ -48,12 +48,16 @@ export default function LoginPage() {
             className="block w-full mb-4 p-4 text-sm border border-rose-500 rounded"
           />
 
-          <button
+          <Button
             type="submit"
-            className="w-full py-3 mb-5 text-white text-lg font-medium bg-rose-500 rounded hover:bg-rose-600"
+            size="full"
+            variant="fill"
+            color="rose"
+            rounded="md"
+            className="mb-4"
           >
             로그인
-          </button>
+          </Button>
         </form>
 
         <div className="flex justify-center flex-wrap gap-3 text-sm text-gray-500 mb-5">

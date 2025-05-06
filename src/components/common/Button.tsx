@@ -14,13 +14,14 @@ export default function Button({
   variant = 'fill',
   color = 'rose',
   rounded = 'sm',
+  className,
   children,
   ...rest
 }: ButtonProps) {
   return (
     <button
       className={clsx(
-        'text-sm font-medium transition-all duration-300',
+        'font-medium transition-all duration-300',
 
         // 둥근 정도 설정
         rounded === 'sm' && 'rounded-sm',
@@ -29,10 +30,10 @@ export default function Button({
         rounded === 'full' && 'rounded-full',
 
         //사이즈
-        size === 'sm' && 'w-[60px] h-10',
-        size === 'md' && 'w-[130px] h-10',
-        size === 'lg' && 'w-[270px] h-8',
-        size === 'full' && 'w-full h-10',
+        size === 'sm' && 'w-[70px] h-10 text-sm px-3',
+        size === 'md' && 'w-[160px] h-10 text-sm px-4',
+        size === 'lg' && 'w-[320px] h-12 text-base px-6',
+        size === 'full' && 'w-full h-12 text-lg px-6',
 
         // 스타일 및 컬러
         variant === 'fill' &&
@@ -46,7 +47,10 @@ export default function Button({
           'border border-rose-500 text-rose-500 bg-[rgba(255,255,255,0.1)] hover:bg-rose-600 hover:text-white active:bg-rose-700',
         variant === 'outline' &&
           color === 'violet' &&
-          'border border-violet-500 text-violet-500 bg-[rgba(255,255,255,0.1)] hover:bg-violet-600 hover:text-white active:bg-violet-700'
+          'border border-violet-500 text-violet-500 bg-[rgba(255,255,255,0.1)] hover:bg-violet-600 hover:text-white active:bg-violet-700',
+
+        // 커스텀 클래스
+        className
       )}
       {...rest}
     >

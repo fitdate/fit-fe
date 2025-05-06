@@ -180,14 +180,14 @@ export default function SignUpPage() {
           error={errors.email as FieldError}
           isDirty={dirtyFields.email}
         />
-         <Button
+        <Button
           type="button"
-          size="full"
+          size="md"
           rounded="full"
           onClick={checkEmailDuplicate}
         >
           이메일 중복 확인
-        </Button> 
+        </Button>
 
         {/*인증코드 필드*/}
         {isEmailCode && (
@@ -198,7 +198,7 @@ export default function SignUpPage() {
               id="email-code"
               type="text"
               placeholder="6자리 인증코드를 입력해주세요."
-             onChange={handleChangeEmailCode}
+              onChange={handleChangeEmailCode}
             />
             <Button
               type="button"
@@ -428,7 +428,7 @@ export default function SignUpPage() {
         />
 
         {/* 프로필 이미지 필드 */}
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 pb-2">
           <label className="text-sm font-medium text-gray-700">
             프로필 사진 <span className="text-red-500">*</span>
           </label>
@@ -475,17 +475,18 @@ export default function SignUpPage() {
         </div>
 
         {/* 폼 제출 버튼 */}
-        <button
+        <Button
           type="submit"
+          size="full"
+          variant="fill"
+          color="rose"
+          rounded="full"
           disabled={!isValid || !isImageValid || isPending}
-          className="w-full p-4 rounded-full text-white bg-rose-500
-            hover:bg-rose-600
-            disabled:bg-gray-300
-            disabled:cursor-not-allowed
-            disabled:opacity-50"
+          isLoading={isPending}
+          className="p-4"
         >
-          {isPending ? '가입 중...' : '가입완료'}
-        </button>
+          가입완료
+        </Button>
       </form>
     </div>
   );

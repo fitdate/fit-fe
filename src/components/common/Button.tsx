@@ -6,6 +6,8 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'fill' | 'outline';
   color?: 'rose' | 'violet';
   rounded?: 'sm' | 'md' | 'lg' | 'full';
+  isLoading?: boolean;
+  loadingText?: string;
   children: React.ReactNode;
 }
 
@@ -15,13 +17,15 @@ export default function Button({
   color = 'rose',
   rounded = 'sm',
   className,
+  isLoading = false,
   children,
+  disabled,
   ...rest
 }: ButtonProps) {
   return (
     <button
       className={clsx(
-        'font-medium transition-all duration-300',
+        'font-medium transition-all duration-300 relative',
 
         // 둥근 정도 설정
         rounded === 'sm' && 'rounded-sm',
@@ -31,8 +35,8 @@ export default function Button({
 
         //사이즈
         size === 'sm' && 'w-[70px] h-10 text-sm px-3',
-        size === 'md' && 'w-[160px] h-10 text-sm px-4',
-        size === 'lg' && 'w-[320px] h-12 text-base px-6',
+        size === 'md' && 'w-full h-10 text-sm px-4',
+        size === 'lg' && 'w-full h-12 text-base px-6',
         size === 'full' && 'w-full h-12 text-lg px-6',
 
         // 스타일 및 컬러
@@ -49,12 +53,22 @@ export default function Button({
           color === 'violet' &&
           'border border-violet-500 text-violet-500 bg-[rgba(255,255,255,0.1)] hover:bg-violet-600 hover:text-white active:bg-violet-700',
 
+        // disabled 상태
+        disabled &&
+          'bg-gray-300 cursor-not-allowed opacity-50 hover:bg-gray-300',
+
         // 커스텀 클래스
         className
       )}
+      disabled={disabled || isLoading}
       {...rest}
     >
-      {children}
+      <span className={clsx(isLoading && 'invisible')}>{children}</span>
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
     </button>
   );
 }

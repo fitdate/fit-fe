@@ -182,9 +182,10 @@ export default function SignUpPage() {
         />
         <Button
           type="button"
-          size="md"
+          size="md-full"
           rounded="full"
           onClick={checkEmailDuplicate}
+          className="mb-4"
         >
           이메일 중복 확인
         </Button>
@@ -228,6 +229,7 @@ export default function SignUpPage() {
           })}
           error={errors.password as FieldError}
           isDirty={dirtyFields.password}
+          className="mb-4"
         />
 
         {/* 비밀번호 확인 필드 */}
@@ -244,6 +246,7 @@ export default function SignUpPage() {
           })}
           error={errors.confirmPassword as FieldError}
           isDirty={dirtyFields.confirmPassword}
+          className="mb-4"
         />
 
         {/* 이름 필드 */}
@@ -262,6 +265,7 @@ export default function SignUpPage() {
           })}
           error={errors.name as FieldError}
           isDirty={dirtyFields.name}
+          className="mb-4"
         />
 
         {/* 키 필드 */}
@@ -284,6 +288,7 @@ export default function SignUpPage() {
           })}
           error={errors.height as FieldError}
           isDirty={dirtyFields.height}
+          className="mb-4"
         />
 
         {/* 닉네임 필드 */}
@@ -302,6 +307,7 @@ export default function SignUpPage() {
           })}
           error={errors.nickname as FieldError}
           isDirty={dirtyFields.nickname}
+          className="mb-4"
         />
 
         {/* 직업 필드 */}
@@ -320,6 +326,7 @@ export default function SignUpPage() {
           })}
           error={errors.job as FieldError}
           isDirty={dirtyFields.job}
+          className="mb-4"
         />
 
         {/* 성별 필드 */}
@@ -328,6 +335,7 @@ export default function SignUpPage() {
           required
           selectedGender={selectedGender}
           error={errors.gender?.message as string}
+          className="mb-4"
         />
 
         {/* 생년월일 필드 */}
@@ -346,6 +354,7 @@ export default function SignUpPage() {
           })}
           error={errors.birthday as FieldError}
           isDirty={dirtyFields.birthday}
+          className="mb-4"
         />
 
         {/* 지역 필드 */}
@@ -369,6 +378,7 @@ export default function SignUpPage() {
           })}
           error={errors.phone as FieldError}
           isDirty={dirtyFields.phone}
+          className="mb-4"
         />
 
         {/* MBTI 필드 */}

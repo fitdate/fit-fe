@@ -2,7 +2,7 @@ import clsx from 'clsx';
 import React from 'react';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  size?: 'sm' | 'md' | 'lg' | 'full';
+  size?: 'sm' | 'md' | 'md-full' | 'lg' | 'full';
   variant?: 'fill' | 'outline';
   color?: 'rose' | 'violet';
   rounded?: 'sm' | 'md' | 'lg' | 'full';
@@ -35,8 +35,9 @@ export default function Button({
 
         //사이즈
         size === 'sm' && 'w-[70px] h-10 text-sm px-3',
-        size === 'md' && 'w-full h-10 text-sm px-4',
-        size === 'lg' && 'w-full h-12 text-base px-6',
+        size === 'md' && 'w-[150px] h-10 text-sm px-4',
+        size === 'md-full' && 'w-full h-10 text-sm px-4',
+        size === 'lg' && 'w-[300px] h-12 text-base px-6',
         size === 'full' && 'w-full h-12 text-lg px-6',
 
         // 스타일 및 컬러

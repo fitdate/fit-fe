@@ -40,11 +40,11 @@ export default function ChatsPage() {
   if (isError) {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4">
-        <div className="text-red-500 text-xl">
+        <div className="text-zinc-900 text-xl">
           채팅 목록을 불러오는데 실패했습니다
         </div>
         <Button
-          size="lg"
+          size="md"
           rounded="full"
           variant="outline"
           onClick={() => window.location.reload()}

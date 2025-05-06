@@ -46,7 +46,7 @@ export default function Button({
           'bg-rose-500 text-white hover:bg-rose-600 active:bg-rose-700',
         variant === 'fill' &&
           color === 'violet' &&
-          'bg-violet-500 text-white hover:bg-violet-600 active:bg-rose-700',
+          'bg-violet-500 text-white hover:bg-violet-600 active:bg-violet-700',
         variant === 'outline' &&
           color === 'rose' &&
           'border border-rose-500 text-rose-500 bg-[rgba(255,255,255,0.1)] hover:bg-rose-600 hover:text-white active:bg-rose-700',

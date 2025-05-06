@@ -429,7 +429,7 @@ export default function SignUpPage() {
 
         {/* 프로필 이미지 필드 */}
         <div className="flex flex-col gap-2 pb-2">
-          <label className="text-sm font-medium text-gray-700">
+          <label className="text-sm font-medium text-zinc-900">
             프로필 사진 <span className="text-red-500">*</span>
           </label>
           <div className="flex flex-wrap justify-center gap-6">

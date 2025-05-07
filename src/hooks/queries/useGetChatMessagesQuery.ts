@@ -1,8 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { getChatMessages } from '@/services/chat';
 
-export const useChatMessages = (chatRoomId: string, userId: string | null) => {
-  console.log('useChatMessages params:', { chatRoomId, userId });
+export const useGetChatMessagesQuery = (
+  chatRoomId: string,
+  userId: string | null
+) => {
+  console.log('useGetChatMessagesQuery params:', { chatRoomId, userId });
 
   return useQuery({
     queryKey: ['chatMessages', chatRoomId, userId],

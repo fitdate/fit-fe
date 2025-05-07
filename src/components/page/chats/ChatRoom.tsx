@@ -18,6 +18,8 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
   const userId = searchParams.get('userId');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  console.log('ChatRoom params:', { chatRoomId, userId });
+
   const { data: chatRoomData, isLoading } = useChatMessages(chatRoomId, userId);
 
   const scrollToBottom = () => {
@@ -57,6 +59,7 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
 
   // 채팅방 메시지 조회
   useEffect(() => {
+    console.log('chatRoomData:', chatRoomData);
     if (chatRoomData?.messages) {
       setMessages(chatRoomData.messages);
     }

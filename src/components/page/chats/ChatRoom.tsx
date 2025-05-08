@@ -1,63 +1,102 @@
 // components/ChatRoom.tsx
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { socket } from '@/lib/socket';
 import { useSearchParams } from 'next/navigation';
 import Button from '@/components/common/Button';
-import Image from 'next/image';
 import Spinner from '@/components/common/Spinner';
+import { Message, ChatRoomProps } from '@/types/chats.type';
+import { Message as MessageComponent } from '@/components/page/chats/Message';
+import { useGetChatMessagesQuery } from '@/hooks/queries/useGetChatMessagesQuery';
+import { useGetUserRegionFestivalsQuery } from '@/hooks/queries/useGetUserRegionFestivalsQuery';
 
-interface Message {
-  id: string;
-  content: string;
-  userId: string;
-  createdAt: string;
-  profileImage?: string;
-  name?: string;
-}
-
-interface ChatRoomProps {
-  chatRoomId: string;
-}
+// 날짜 포맷 변환 함수
+const formatDate = (dateStr: string) =>
+  `${dateStr.slice(0, 4)}/${dateStr.slice(4, 6)}/${dateStr.slice(6, 8)}`;
 
 export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const searchParams = useSearchParams();
   const userId = searchParams.get('userId');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [festivalPage, setFestivalPage] = useState(1);
+  const festivalsPerPage = 2;
+  const pageButtonLimit = 5;
 
+  const { data: chatRoomData, isLoading: isChatLoading } =
+    useGetChatMessagesQuery(chatRoomId, userId);
+  const { data: festivalData } = useGetUserRegionFestivalsQuery(userId || '');
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  // 채팅방 메시지 초기 데이터 설정 및 스크롤
   useEffect(() => {
+    console.log('메시지 초기화 useEffect 실행', {
+      chatRoomDataMessages: chatRoomData?.messages?.length,
+      festivalData: festivalData?.length,
+    });
+
+    if (chatRoomData?.messages) {
+      // 축제 정보를 메시지 형태로 변환
+      const festivalMessage: Message = {
+        id: 'festival-info',
+        content: '이 지역의 축제 정보',
+        userId: 'system',
+        chatRoomId,
+        createdAt: new Date().toISOString(),
+        isMine: false,
+        isFestivalInfo: true,
+        festivals: festivalData && festivalData.length > 0 ? festivalData : [],
+      };
+
+      setMessages([...chatRoomData.messages, festivalMessage]);
+      // 초기 메시지 로드 후 스크롤 최하단
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    }
+  }, [chatRoomData, festivalData]);
+
+  // 새 메시지 추가 시 스크롤 최하단으로 이동
+  useEffect(() => {
+    console.log('스크롤 useEffect 실행', {
+      messagesLength: messages.length,
+      lastMessage: messages[messages.length - 1]?.content,
+    });
+    scrollToBottom();
+  }, [messages]);
+
+  // 소켓 연결 및 메시지 수신 설정
+  useEffect(() => {
+    console.log('소켓 연결 useEffect 실행', { userId, chatRoomId });
     if (!userId) return;
 
     socket.connect();
 
     socket.on('connect', () => {
+      console.log('소켓 연결됨');
       setIsConnected(true);
-      // 채팅방 참여
       socket.emit('join', {
         chatRoomId,
         userId,
       });
     });
 
-    socket.on('connect_error', (err) => {
-      console.error('❌ 소켓 연결 에러:', err.message);
-    });
-
-    socket.on('disconnect', (reason) => {
-      console.warn('⚠️ 소켓 연결 해제됨:', reason);
-    });
-
     socket.on('message', (message: Message) => {
+      console.log('새 메시지 수신', message);
       setMessages((prev) => [...prev, message]);
     });
 
     return () => {
+      console.log('소켓 연결 해제');
       socket.disconnect();
     };
   }, [chatRoomId, userId]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,14 +106,14 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
       content: inputMessage,
       userId,
       chatRoomId,
-      profileImage: '/default-profile.png',
-      name: '사용자',
+      profileImage: chatRoomData?.partner?.profileImage || '/default.png',
+      name: chatRoomData?.partner?.name || '알 수 없음',
     });
 
     setInputMessage('');
   };
 
-  if (!isConnected) {
+  if (isChatLoading || !isConnected) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
         <Spinner size="lg" color="primary" />
@@ -83,55 +122,138 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)]">
+    <div className="flex flex-col h-[calc(100vh-160px)] bg-violet-100">
       {/* 메시지 목록 */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-violet-100">
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.userId === userId ? 'justify-end' : 'justify-start'}`}
-          >
-            {message.userId !== userId && (
-              <div className="flex items-end mr-2">
-                <Image
-                  src={message.profileImage || '/default-profile.png'}
-                  alt="프로필"
-                  width={32}
-                  height={32}
-                  className="rounded-full object-cover"
-                />
+        {messages.map((message) =>
+          message.isFestivalInfo && message.festivals ? (
+            <div key={message.id} className="p-4 bg-white rounded-lg shadow-sm">
+              <h3 className="text-lg font-semibold mb-2">이 지역의 축제</h3>
+              <div className="flex flex-col gap-2">
+                {message.festivals
+                  .slice(
+                    (festivalPage - 1) * festivalsPerPage,
+                    festivalPage * festivalsPerPage
+                  )
+                  .map((festival) => (
+                    <div
+                      key={festival.title}
+                      className="p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-medium text-violet-700">
+                          {festival.title}
+                        </h4>
+                        <span className="text-xs text-gray-500">
+                          {new Date(
+                            formatDate(festival.startDate)
+                          ).toLocaleDateString()}{' '}
+                          ~{' '}
+                          {new Date(
+                            formatDate(festival.endDate)
+                          ).toLocaleDateString()}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {festival.address}
+                      </p>
+                      <a
+                        href={festival.naverSearchUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-violet-600 hover:text-violet-800 mt-2 inline-block"
+                      >
+                        네이버에서 더 알아보기
+                      </a>
+                    </div>
+                  ))}
               </div>
-            )}
-            <div className="flex flex-col max-w-[70%]">
-              {message.userId !== userId && (
-                <span className="text-sm text-gray-600 mb-1">
-                  {message.name || '알 수 없음'}
-                </span>
-              )}
-              <div
-                className={`rounded-lg p-3 ${
-                  message.userId === userId
-                    ? 'bg-violet-500 text-white'
-                    : 'bg-white'
-                }`}
-              >
-                {message.content}
-              </div>
-              <span className="text-xs text-gray-500 mt-1">
-                {new Date(message.createdAt).toLocaleTimeString('ko-KR', {
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true,
-                })}
-              </span>
+              {/* 페이지네이션 */}
+              {message.festivals.length > festivalsPerPage &&
+                (() => {
+                  const totalPages = Math.ceil(
+                    message.festivals.length / festivalsPerPage
+                  );
+                  const currentGroup = Math.floor(
+                    (festivalPage - 1) / pageButtonLimit
+                  );
+                  const startPage = currentGroup * pageButtonLimit + 1;
+                  const endPage = Math.min(
+                    startPage + pageButtonLimit - 1,
+                    totalPages
+                  );
+                  const pageNumbers = [];
+                  for (let i = startPage; i <= endPage; i++) {
+                    pageNumbers.push(i);
+                  }
+                  return (
+                    <div className="flex gap-2 mt-4 justify-center">
+                      <button
+                        className={`px-3 py-1 rounded transition-colors duration-150 ${
+                          startPage === 1
+                            ? 'bg-transparent text-gray-300 cursor-not-allowed'
+                            : 'bg-transparent text-gray-500 hover:bg-violet-100 hover:text-violet-600'
+                        }`}
+                        onClick={() => {
+                          if (startPage !== 1) setFestivalPage(startPage - 1);
+                        }}
+                        disabled={startPage === 1}
+                        aria-label="이전 페이지 그룹"
+                      >
+                        &lt;
+                      </button>
+                      {pageNumbers.map((num) => (
+                        <button
+                          key={num}
+                          className={`px-3 py-1 rounded ${
+                            festivalPage === num
+                              ? 'bg-violet-500 text-white'
+                              : 'bg-gray-200 text-gray-700 hover:bg-violet-100 hover:text-violet-600'
+                          }`}
+                          onClick={() => setFestivalPage(num)}
+                        >
+                          {num}
+                        </button>
+                      ))}
+                      <button
+                        className={`px-3 py-1 rounded transition-colors duration-150 ${
+                          endPage === totalPages
+                            ? 'bg-transparent text-gray-300 cursor-not-allowed'
+                            : 'bg-transparent text-gray-500 hover:bg-violet-100 hover:text-violet-600'
+                        }`}
+                        onClick={() => {
+                          if (endPage !== totalPages)
+                            setFestivalPage(endPage + 1);
+                        }}
+                        disabled={endPage === totalPages}
+                        aria-label="다음 페이지 그룹"
+                      >
+                        &gt;
+                      </button>
+                    </div>
+                  );
+                })()}
             </div>
-          </div>
-        ))}
+          ) : (
+            <MessageComponent
+              key={message.id}
+              message={{
+                ...message,
+                profileImage: !message.isMine
+                  ? chatRoomData?.partner?.profileImage
+                  : undefined,
+                name: !message.isMine ? chatRoomData?.partner?.name : undefined,
+              }}
+              isMine={message.userId === userId}
+            />
+          )
+        )}
+        <div ref={messagesEndRef} />
       </div>
 
       {/* 메시지 입력 */}
       <form onSubmit={sendMessage} className="p-4 rounded-t-lg bg-violet-300">
-        <div className="flex gap-2">
+        <div className="flex gap-2 h-10">
           <input
             type="text"
             value={inputMessage}

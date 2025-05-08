@@ -40,7 +40,11 @@ export default function CommonLayout({ children }: { children: ReactNode }) {
         <div className="h-[80px]">
           <Header />
         </div>
-        <main className="flex-1 overflow-auto scrollbar-hide">{children}</main>
+        <main className="flex-1 overflow-auto scrollbar-hide w-full">
+          <div className="flex min-h-full items-center justify-center">
+            <div className="w-full h-full max-w-3xl">{children}</div>
+          </div>
+        </main>
         <div className="h-[80px]">
           <Footer />
         </div>

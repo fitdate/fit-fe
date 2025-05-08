@@ -19,8 +19,24 @@ import {
 import { useAuthStore } from '@/store/authStore';
 
 const REGION = [
-  '', '서울', '부산', '대구', '인천', '광주', '대전', '울산', '세종', '경기',
-  '강원', '충북', '충남', '전북', '전남', '경북', '경남', '제주',
+  '',
+  '서울',
+  '부산',
+  '대구',
+  '인천',
+  '광주',
+  '대전',
+  '울산',
+  '세종',
+  '경기',
+  '강원',
+  '충북',
+  '충남',
+  '전북',
+  '전남',
+  '경북',
+  '경남',
+  '제주',
 ];
 
 export default function MembersPage() {
@@ -60,7 +76,12 @@ export default function MembersPage() {
   const applyFilter = async (e: FormEvent) => {
     e.preventDefault();
     try {
-      await saveFilterSettings({ region, minAge: age, maxAge: 60, minLikeCount: likes });
+      await saveFilterSettings({
+        region,
+        minAge: age,
+        maxAge: 60,
+        minLikeCount: likes,
+      });
       const refreshedUsers = await fetchFilteredUsersFromGet();
       setUsers(refreshedUsers);
       toggleFilter();
@@ -70,10 +91,12 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="relative w-full min-h-full flex flex-col gap-10">
+    <div
+      className={`relative w-full h-[calc(100vh-160px)] flex flex-col ${isShowFilter ? 'overflow-hidden' : ''}`}
+    >
       {isShowFilter && (
-        <div className="absolute z-10 w-full h-full bg-[rgba(0,0,0,0.7)] px-8 py-10">
-          <div className="bg-white rounded-3xl p-6 flex flex-col gap-6">
+        <div className="absolute inset-0 z-10 bg-zinc-900/80 px-8 py-10 flex items-center justify-center">
+          <div className="bg-white rounded-3xl p-6 flex flex-col gap-6 w-full max-w-md">
             <div className="flex items-center">
               <h1 className="mx-auto text-lg font-semibold">필터</h1>
               <XMarkIcon
@@ -84,7 +107,6 @@ export default function MembersPage() {
               />
             </div>
             <Divider />
-
             <form className="flex flex-col gap-7" onSubmit={applyFilter}>
               <div className="flex flex-col">
                 <label htmlFor="region" className="font-medium mb-1">
@@ -172,7 +194,7 @@ export default function MembersPage() {
         </div>
         <p className="text-gray-400 text-sm">새로운 인연을 찾아 보세요!</p>
 
-        <div className="flex flex-wrap justify-center items-center pt-5 gap-7">
+        <div className="flex flex-wrap gap-7 pt-5">
           {users.map((u) => (
             <Link key={u.id} href={`/members/${u.id}`}>
               <ProfileCard

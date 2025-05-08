@@ -13,6 +13,7 @@ import {
 } from '@/services/sparklist';
 import { passMatchRequest } from '@/services/passMatch';
 import { acceptMatchRequest } from '@/services/acceptMatch';
+import { acceptCoffeeChatRequest, rejectCoffeeChatRequest } from '@/services/chat';
 
 interface SparkUser {
   id: string;
@@ -21,7 +22,21 @@ interface SparkUser {
   birthday: string | null;
   region: string;
   profileImage: string;
+  coffeeChatId?: string;
+  isSuccess?: boolean;
 }
+
+type ProfileType = 'match' | 'like' | 'coffee';
+
+// ✅ 중복 제거 유틸 함수
+const removeDuplicates = (list: SparkUser[]) => {
+  const seen = new Set();
+  return list.filter((item) => {
+    if (seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
+};
 
 const getKoreanAge = (birthday: string | null): number => {
   if (!birthday) return 0;
@@ -45,51 +60,39 @@ export default function FriendsPage() {
     const fetchData = async () => {
       const data = await fetchSparkList();
 
-      console.log('🔥 전체 응답 확인', data);
+      const simplifiedMatchList: SparkUser[] = data.matchList.map((item: MatchItem) => ({
+        id: item.matchedUserId,
+        nickname: item.nickname,
+        likeCount: item.likeCount,
+        birthday: item.age ? `${new Date().getFullYear() - item.age + 1}-01-01` : null,
+        region: item.region,
+        profileImage: item.profileImage ?? '/default.png',
+        isSuccess: item.isSuccess,
+      }));
 
-      const simplifiedMatchList: SparkUser[] = data.matchList.map(
-        (item: MatchItem) => ({
-          id: item.matchedUserId,
-          nickname: item.nickname,
-          likeCount: item.likeCount,
-          birthday: item.age
-            ? `${new Date().getFullYear() - item.age + 1}-01-01`
-            : null,
-          region: item.region,
-          profileImage: item.profileImage ?? '/default.png',
-          isSuccess: item.isSuccess,
-        })
-      );
+      const simplifiedLikeList: SparkUser[] = data.likeList.map((item: LikeUser) => ({
+        id: item.likedUserId,
+        nickname: item.nickname,
+        likeCount: item.likeCount,
+        birthday: item.age ? `${new Date().getFullYear() - item.age + 1}-01-01` : null,
+        region: item.region,
+        profileImage: item.profileImage ?? '/default.png',
+      }));
 
-      const simplifiedLikeList: SparkUser[] = data.likeList.map(
-        (item: LikeUser) => ({
-          id: item.likedUserId,
-          nickname: item.nickname,
-          likeCount: item.likeCount,
-          birthday: item.age
-            ? `${new Date().getFullYear() - item.age + 1}-01-01`
-            : null,
-          region: item.region,
-          profileImage: item.profileImage ?? '/default.png',
-        })
-      );
+      const simplifiedCoffeeChatList: SparkUser[] = data.coffeeChatList.map((item: CoffeeChatUser) => ({
+        id: item.coffeeChatUserId,
+        nickname: item.nickname,
+        likeCount: item.likeCount,
+        birthday: item.age ? `${new Date().getFullYear() - item.age + 1}-01-01` : null,
+        region: item.region,
+        profileImage: item.profileImage ?? '/default.png',
+        coffeeChatId: item.coffeeChatId,
+      }));
 
-      const simplifiedCoffeeChatList: SparkUser[] = data.coffeeChatList.map(
-        (item: CoffeeChatUser) => ({
-          id: item.coffeeChatUserId,
-          nickname: item.nickname,
-          likeCount: item.likeCount,
-          birthday: item.age
-            ? `${new Date().getFullYear() - item.age + 1}-01-01`
-            : null,
-          region: item.region,
-          profileImage: item.profileImage ?? '/default.png',
-        })
-      );
-
-      setRoundProfiles(simplifiedMatchList);
-      setLikeProfiles(simplifiedLikeList);
-      setCoffeeChatProfiles(simplifiedCoffeeChatList);
+      // ✅ 중복 제거 적용
+      setRoundProfiles(removeDuplicates(simplifiedMatchList));
+      setLikeProfiles(removeDuplicates(simplifiedLikeList));
+      setCoffeeChatProfiles(removeDuplicates(simplifiedCoffeeChatList));
     };
 
     fetchData();
@@ -115,14 +118,27 @@ export default function FriendsPage() {
   const handleReject = async (id: string) => {
     try {
       const response = await passMatchRequest(id);
-      console.log('거절 응답:', response.data);
-      const { isSuccess } = response.data;
-      console.log('isSuccess 값:', isSuccess);
-
-      // ✅ 매칭 결과 페이지로 이동하면서 쿼리 전달
-      router.push(`/matching-result?success=${isSuccess}`);
+      router.push(`/matching-result?success=${response.data.isSuccess}`);
     } catch (error) {
       console.error('거절 실패:', error);
+    }
+  };
+
+  const handleCoffeeAccept = async (coffeeChatId: string) => {
+    try {
+      await acceptCoffeeChatRequest(coffeeChatId);
+      alert('커피챗 수락 완료!');
+    } catch (error) {
+      console.error('커피챗 수락 실패:', error);
+    }
+  };
+
+  const handleCoffeeReject = async (id: string) => {
+    try {
+      await rejectCoffeeChatRequest(id);
+      alert('커피챗 거절 완료!');
+    } catch (error) {
+      console.error('커피챗 거절 실패:', error);
     }
   };
 
@@ -131,34 +147,38 @@ export default function FriendsPage() {
     // eslint-disable-next-line no-unused-vars
     onAccept?: (id: string) => void,
     // eslint-disable-next-line no-unused-vars
-    onReject?: (id: string) => void
+    onReject?: (id: string) => void,
+    useRoundCard = true,
+    type: ProfileType = 'match'
   ) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 py-2">
-      {profiles.map((profile) => {
-        if (!profile.id) {
-          console.warn('❗️ProfileCard에서 id가 undefined인 항목:', profile);
-          return null; // id 없으면 렌더링 안 함
-        }
-
-        return onAccept && onReject ? (
+      {profiles.map((profile) =>
+        useRoundCard && onAccept && onReject ? (
           <ProfileCardRoundOne
-            key={profile.id}
+            key={`${type}-${profile.id}`} // ✅ 섹션별 구분된 key
             name={profile.nickname}
             age={getKoreanAge(profile.birthday)}
             region={profile.region}
             likes={profile.likeCount}
             profileImageUrl={profile.profileImage}
-            onAccept={() => onAccept(profile.id)}
-            onReject={() => onReject(profile.id)}
             onClick={() => handleClickMemberDetailMove(profile.id)}
+            onAccept={() => {
+              if (type === 'coffee') {
+                if (!profile.coffeeChatId) {
+                  console.warn('⚠️ 커피챗 ID 없음:', profile);
+                  return;
+                }
+                onAccept(profile.coffeeChatId);
+              } else {
+                onAccept(profile.id);
+              }
+            }}
+            onReject={() => onReject(profile.id)}
           />
         ) : (
           <div
-            key={profile.id}
-            onClick={() => {
-              console.log('✅ ProfileCard 클릭됨, id:', profile.id);
-              handleClickMemberDetailMove(profile.id);
-            }}
+            key={`${type}-${profile.id}`} // ✅ 여기 div도 동일하게
+            onClick={() => handleClickMemberDetailMove(profile.id)}
             className="cursor-pointer"
           >
             <ProfileCard
@@ -170,8 +190,8 @@ export default function FriendsPage() {
               profileImageUrl={profile.profileImage}
             />
           </div>
-        );
-      })}
+        )
+      )}
     </div>
   );
 
@@ -185,7 +205,9 @@ export default function FriendsPage() {
         {renderProfileCards(
           roundProfiles.slice(0, isRoundExpanded ? undefined : 3),
           handleAccept,
-          handleReject
+          handleReject,
+          true,
+          'match'
         )}
         {roundProfiles.length >= 4 && (
           <Button
@@ -206,7 +228,11 @@ export default function FriendsPage() {
           <h2 className="font-semibold text-lg">호감 표시</h2>
         </div>
         {renderProfileCards(
-          likeProfiles.slice(0, isLikeExpanded ? undefined : 3)
+          likeProfiles.slice(0, isLikeExpanded ? undefined : 3),
+          undefined,
+          undefined,
+          false,
+          'like'
         )}
         {likeProfiles.length >= 4 && (
           <Button
@@ -227,7 +253,11 @@ export default function FriendsPage() {
           <h2 className="font-semibold text-lg">커피챗 신청</h2>
         </div>
         {renderProfileCards(
-          coffeeChatProfiles.slice(0, isCoffeeChatExpanded ? undefined : 2)
+          coffeeChatProfiles.slice(0, isCoffeeChatExpanded ? undefined : 2),
+          handleCoffeeAccept,
+          handleCoffeeReject,
+          true,
+          'coffee'
         )}
         {coffeeChatProfiles.length >= 4 && (
           <Button

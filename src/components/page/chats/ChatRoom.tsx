@@ -11,6 +11,10 @@ import { Message as MessageComponent } from '@/components/page/chats/Message';
 import { useGetChatMessagesQuery } from '@/hooks/queries/useGetChatMessagesQuery';
 import { useGetUserRegionFestivalsQuery } from '@/hooks/queries/useGetUserRegionFestivalsQuery';
 
+// 날짜 포맷 변환 함수
+const formatDate = (dateStr: string) =>
+  `${dateStr.slice(0, 4)}/${dateStr.slice(4, 6)}/${dateStr.slice(6, 8)}`;
+
 export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isConnected, setIsConnected] = useState(false);
@@ -133,8 +137,13 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
                         {festival.title}
                       </h4>
                       <span className="text-xs text-gray-500">
-                        {new Date(festival.startDate).toLocaleDateString()} ~{' '}
-                        {new Date(festival.endDate).toLocaleDateString()}
+                        {new Date(
+                          formatDate(festival.startDate)
+                        ).toLocaleDateString()}{' '}
+                        ~{' '}
+                        {new Date(
+                          formatDate(festival.endDate)
+                        ).toLocaleDateString()}
                       </span>
                     </div>
                     <p className="text-sm text-gray-600 mt-1">

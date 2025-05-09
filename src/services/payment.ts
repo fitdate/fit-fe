@@ -10,16 +10,15 @@ export const TOSS_CLIENT_KEY = 'test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm';
 // 결제 승인 요청
 export const confirmPayment = async (paymentData: PaymentConfirmRequest) => {
   try {
+    console.log('결제 승인 요청 데이터:', paymentData);
     const response = await instance.post<PaymentConfirmResponse>(
-      '/payments/confirm',
+      '/payment/confirm',
       paymentData
     );
     return response.data;
   } catch (error) {
     const err = error as AxiosError<PaymentConfirmResponse>;
-    console.error('결제 승인 에러:', err);
-    console.error('응답 상태 코드:', err.response?.status);
-    console.error('메시지:', err.response?.data?.message);
+    console.error('요청 데이터:', paymentData);
     throw new Error(err.response?.data?.message || '결제 승인에 실패했습니다.');
   }
 };

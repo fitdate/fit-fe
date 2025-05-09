@@ -15,6 +15,7 @@ interface PaymentModalProps {
   price: string;
   userName: string;
   userEmail: string;
+  userPhone: string;
 }
 
 const generateRandomString = () =>
@@ -27,6 +28,7 @@ export default function PaymentModal({
   price,
   userName,
   userEmail,
+  userPhone,
 }: PaymentModalProps) {
   const [widgets, setWidgets] = useState<TossPaymentsWidgets | null>(null);
   const [ready, setReady] = useState(false);
@@ -81,7 +83,7 @@ export default function PaymentModal({
         orderName: `커피 ${quantity}개`,
         customerName: userName,
         customerEmail: userEmail,
-        successUrl: `${window.location.origin}/mypage/payment/success`,
+        successUrl: `${window.location.origin}/mypage/payment/success?customerName=${userName}&customerEmail=${userEmail}&customerMobilePhone=${userPhone}`,
         failUrl: `${window.location.origin}/mypage/payment/fail`,
       });
 
@@ -95,6 +97,9 @@ export default function PaymentModal({
           paymentKey: paymentResult.paymentKey,
           orderId: paymentResult.orderId,
           amount: amount.value,
+          customerEmail: userEmail,
+          customerName: userName,
+          customerMobilePhone: userPhone,
         };
         confirmPayment(confirmData);
       }
@@ -107,7 +112,7 @@ export default function PaymentModal({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-8 w-[400px]">
+      <div className="bg-white rounded-lg p-8 w-[480px]">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">결제하기</h2>
           <button
@@ -130,7 +135,7 @@ export default function PaymentModal({
         <div id="agreement" className="w-full mb-4" />
 
         <button
-          className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:bg-gray-400"
+          className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 transition-colors disabled:bg-gray-400 active:bg-blue-700"
           onClick={handlePayment}
           disabled={!ready}
         >

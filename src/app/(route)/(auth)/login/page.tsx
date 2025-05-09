@@ -79,7 +79,7 @@ export default function LoginPage() {
         <div className="space-y-3">
           {/* 네이버 로그인 */}
           <button className="flex items-center justify-center w-full py-3 bg-[#03C75A] rounded text-white">
-            <div className="relative w-6 h-6 mr-2">
+            <div className="relative w-8 h-8 mr-2">
               <Image
                 src="/naver-logo.png"
                 alt="Naver"
@@ -87,11 +87,12 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
+            <span className="text-base font-medium">네이버 로그인</span>
           </button>
 
           {/* 카카오 로그인 */}
           <button className="flex items-center justify-center w-full py-3 bg-[#FEE500] rounded text-black">
-            <div className="relative w-6 h-6 mr-2">
+            <div className="relative w-8 h-8 mr-2">
               <Image
                 src="/kakao-logo.png"
                 alt="Kakao"
@@ -99,11 +100,12 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
+            <span className="text-base font-medium">카카오 로그인</span>
           </button>
 
           {/* 구글 로그인 */}
-          <button className="flex items-center justify-center w-full py-3 border border-gray-300 rounded bg-white hover:bg-gray-100">
-            <div className="relative w-6 h-6 mr-2">
+          <button className="flex items-center justify-center w-full py-3 border border-gray-300 rounded bg-white">
+            <div className="relative w-8 h-8 mr-2">
               <Image
                 src="/google-logo.png"
                 alt="Google"
@@ -111,6 +113,7 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
+            <span className="text-base font-medium">구글 로그인</span>
           </button>
         </div>
       </div>

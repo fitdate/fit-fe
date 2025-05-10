@@ -1,7 +1,8 @@
 'use client';
 
 import Button from '@/components/common/Button';
-import { useFindEmailMutation } from '@/hooks/mutation/useFindEmailMutation';
+import { useFindEmailMutation } from '@/hooks/mutations/useFindEmailMutation';
+
 import Link from 'next/link';
 import { ChangeEvent, useState } from 'react';
 

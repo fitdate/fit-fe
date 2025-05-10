@@ -4,7 +4,8 @@ import Button from '@/components/common/Button';
 import {
   useChangePasswordMutation,
   useFindPasswordMutation,
-} from '@/hooks/mutation/useFindPasswordMutation';
+} from '@/hooks/mutations/useFindPasswordMutation';
+
 import { ChangeEvent, useState } from 'react';
 
 export default function PasswordFindPage() {

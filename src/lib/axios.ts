@@ -14,6 +14,14 @@ const PUBLIC_PATHS = [
   '/auth/check-nickname',
   '/auth/send-verification-email',
   '/auth/verify-email',
+  '/auth/google',
+  '/auth/google/login/callback',
+  '/auth/kakao',
+  '/auth/kakao/login/callback',
+  '/auth/naver',
+  '/auth/naver/login/callback',
+  '/match/random/public',
+  '/user/filtered-users',
 ];
 
 // 응답 인터셉터 추가

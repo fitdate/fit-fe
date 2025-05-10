@@ -8,29 +8,25 @@ import { HeartIcon } from '@heroicons/react/24/solid';
 import TagBadge from '@/components/common/TagBadge';
 import MemberProfileDetailCard from '@/components/common/ProfileDetailCard';
 import Button from '@/components/common/Button';
-import { sendNotification } from '@/services/notification'; // ✅ 변경된 import
+import { sendNotification } from '@/services/notification';
 import { likeMember } from '@/services/like';
 import { fetchUserInfo, MemberDetailResponse } from '@/services/memberDetail';
 import { useAuthStore } from '@/store/authStore';
 import LoginRequiredModal from '@/components/common/LoginRequiredModal';
-import { sendCoffeeChat } from '@/services/chat';
-import { AxiosError } from 'axios';
 import { toast } from 'react-toastify';
-
-interface ErrorResponse {
-  message: string;
-}
+import { useSendCoffeeChatMutation } from '@/hooks/mutation/useSendCoffeeChatMutation';
+import { isAxiosError } from '@/lib/error';
 
 export default function MemberDetailPage() {
   const params = useParams();
   const userId = params.id as string;
-
   const { isLoggedIn } = useAuthStore();
   const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [member, setMember] = useState<MemberDetailResponse | null>(null);
   const [isLiked, setIsLiked] = useState(false);
   const [isClicked, setIsClicked] = useState(false);
   const [, setCoffeeChatId] = useState<string | null>(null);
+  const sendCoffeeChatMutation = useSendCoffeeChatMutation();
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -38,7 +34,12 @@ export default function MemberDetailPage() {
         const data = await fetchUserInfo(userId);
         setMember(data);
       } catch (error) {
-        console.error('멤버 정보 로드 실패:', error);
+        if (isAxiosError(error)) {
+          const errorMessage = error.response?.data?.message;
+          toast.error(errorMessage || '멤버 정보를 불러오는데 실패했습니다.');
+        } else {
+          toast.error('멤버 정보를 불러오는데 실패했습니다.');
+        }
       }
     };
     getUserInfo();
@@ -65,7 +66,12 @@ export default function MemberDetailPage() {
       setIsClicked(true);
       setTimeout(() => setIsClicked(false), 300);
     } catch (error) {
-      console.error('좋아요 알림 전송 실패:', error);
+      if (isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message;
+        toast.error(errorMessage || '좋아요 알림 전송에 실패했습니다.');
+      } else {
+        toast.error('좋아요 알림 전송에 실패했습니다.');
+      }
     }
   };
 
@@ -78,7 +84,7 @@ export default function MemberDetailPage() {
     if (!userId) return toast.error('상대방 ID가 없습니다!');
 
     try {
-      const response = await sendCoffeeChat({
+      const response = await sendCoffeeChatMutation.mutateAsync({
         title: '커피챗 신청이 왔어요!',
         content: '커피챗을 신청하셨습니다. 확인해보세요 ☕',
         type: 'COFFEE_CHAT',
@@ -87,23 +93,27 @@ export default function MemberDetailPage() {
       });
 
       setCoffeeChatId(response.coffeeChatId);
-      console.log('💡 커피챗 ID 저장됨:', response.coffeeChatId);
 
       await sendNotification(userId, {
         type: 'coffee_chat_request',
         title: '커피챗 신청',
         content: '커피챗 요청이 도착했어요 ☕',
-      }); // ✅ SSE 방식으로 변경
+      });
 
       toast.success('커피챗 신청이 완료되었습니다!');
     } catch (error) {
-      const err = error as AxiosError<ErrorResponse>;
-      const errorMessage = err.response?.data?.message;
-
-      if (errorMessage?.includes('이미 요청된 커피챗이 존재합니다')) {
-        toast.warning(
-          '이미 요청된 커피챗이 존재합니다. 상대방의 응답을 기다려주세요.'
-        );
+      if (isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message;
+        if (errorMessage?.includes('이미 요청된 커피챗이 존재합니다')) {
+          toast.warning(
+            '이미 요청된 커피챗이 존재합니다. 상대방의 응답을 기다려주세요.'
+          );
+        } else {
+          toast.error(
+            errorMessage ||
+              '서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.'
+          );
+        }
       } else {
         toast.error('서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }

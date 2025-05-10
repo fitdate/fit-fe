@@ -1,32 +1,16 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import NavItem from './NavItem';
 import Image from 'next/image';
-import { getMyProfile } from '@/services/user';
-import { getUserCoffeeCount } from '@/services/userCoffee'; // ✅ 커피 개수 API
+import { useCoffeeCountQuery } from '@/hooks/queries/useCoffeeCountQuery';
+import { useMyProfileQuery } from '@/hooks/queries/useMyProfileQuery';
 
 export default function MyPageNavigation() {
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [coffeeCount, setCoffeeCount] = useState<number>(0);
+  const { data: coffeeCount } = useCoffeeCountQuery();
+  const { data: user } = useMyProfileQuery();
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const user = await getMyProfile();
-      if (user) {
-        setIsLoggedIn(true);
-
-        // ✅ 커피 개수 가져오기
-        const count = await getUserCoffeeCount(user.id);
-        setCoffeeCount(count);
-      } else {
-        setIsLoggedIn(false);
-      }
-    };
-    fetchData();
-  }, []);
-
-  if (!isLoggedIn) {
+  if (!user) {
     return null; // 비로그인 상태면 메뉴 숨김
   }
 
@@ -41,7 +25,7 @@ export default function MyPageNavigation() {
                 <div className="relative w-[24px] h-[24px]">
                   <Image src={'/coffee-beans.png'} alt="커피이미지" fill />
                 </div>
-                <div className="text-xl">{coffeeCount}</div> {/* ✅ 동적 표시 */}
+                <div className="text-xl">{coffeeCount}</div>{' '}
               </div>
               <div className="relative w-[16px] h-[16px]">
                 <Image src={'/icons/Vector.png'} alt="화살표" fill />

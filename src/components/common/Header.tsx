@@ -7,28 +7,16 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import Button from './Button';
 import { useNotificationStore } from '@/store/notificationStore';
-import { useEffect, useState } from 'react';
-import { getUserCoffeeCount } from '@/services/userCoffee'; // 커피 서비스 import!
+import { useCoffeeCountQuery } from '@/hooks/queries/useCoffeeCountQuery';
 
 export default function Header() {
   const pathName = usePathname();
   const router = useRouter();
-  const { isLoggedIn, user } = useAuthStore();
-
+  const { isLoggedIn } = useAuthStore();
   const { notifications, hasNew } = useNotificationStore();
-
-  const [coffeeCount, setCoffeeCount] = useState<number>(0); // 나의 커피 상태
-
-  useEffect(() => {
-    const fetchCoffeeCount = async () => {
-      if (user) {
-        const count = await getUserCoffeeCount(); // 서비스 사용
-        setCoffeeCount(count);
-      }
-    };
-
-    fetchCoffeeCount();
-  }, [user]);
+  const { data: coffeeCount } = useCoffeeCountQuery({
+    enabled: isLoggedIn,
+  });
 
   return isLoggedIn ? (
     <header className="relative flex items-center justify-between h-20 border-b px-4">

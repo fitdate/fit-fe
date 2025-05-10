@@ -7,11 +7,35 @@ const instance = axios.create({
   withCredentials: true,
 });
 
+// 인증이 필요하지 않은 API 경로들
+const PUBLIC_PATHS = [
+  '/auth/register',
+  '/auth/check-email',
+  '/auth/check-nickname',
+  '/auth/send-verification-email',
+  '/auth/verify-email',
+  '/auth/google',
+  '/auth/google/login/callback',
+  '/auth/kakao',
+  '/auth/kakao/login/callback',
+  '/auth/naver',
+  '/auth/naver/login/callback',
+  '/match/random/public',
+  '/user/filtered-users',
+];
+
 // 응답 인터셉터 추가
 instance.interceptors.response.use(
   (response) => response,
   async (error) => {
     if (error.response?.status === 401) {
+      const requestUrl = error.config.url || '';
+
+      // 인증이 필요하지 않은 API 요청은 리다이렉트하지 않음
+      if (PUBLIC_PATHS.some((path) => requestUrl.includes(path))) {
+        return Promise.reject(error);
+      }
+
       // 토큰 만료 또는 인증 실패
       const authStore = useAuthStore.getState();
       authStore.logout();

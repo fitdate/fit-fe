@@ -99,12 +99,3 @@ export const changePassword = async (
     return false; // 실패
   }
 };
-
-export const deleteUser = async () => {
-  try {
-    const response = await instance.delete(`auth/delete-account`);
-    return response.data;
-  } catch (error) {
-    console.error('회원 탈퇴 로직 api 에러 : ', error);
-  }
-};

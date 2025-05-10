@@ -1,11 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchLoggedInUsers, fetchPublicUsers } from '@/services/memeber';
 import { useAuthStore } from '@/store/authStore';
-
-interface UsersQueryParams {
-  page: number;
-  limit: number;
-}
+import { UsersQueryParams } from '@/types/member.type';
 
 export const useUsersQuery = (params?: UsersQueryParams) => {
   const isLoggedIn = useAuthStore((state) => state.isLoggedIn);

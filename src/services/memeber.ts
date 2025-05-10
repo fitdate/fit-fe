@@ -1,18 +1,15 @@
 import instance from '@/lib/axios';
-import { FilteredUser, FilteredUsersResponse } from '@/types/member.type';
-
-interface PaginationParams {
-  page: number;
-  limit: number;
-}
+import {
+  FilteredUser,
+  FilteredUsersResponse,
+  PaginationParams,
+  FilterParams,
+} from '@/types/member.type';
 
 // 로그인 필터된 회원목록 조회
-export const fetchLoggedInFilteredUsers = async (filter: {
-  region: string;
-  minAge: number;
-  maxAge: number;
-  minLikeCount: number;
-}): Promise<FilteredUser[]> => {
+export const fetchLoggedInFilteredUsers = async (
+  filter: FilterParams
+): Promise<FilteredUser[]> => {
   const res = await instance.get<FilteredUsersResponse>(
     '/user-filter/filtered-list',
     {
@@ -23,12 +20,9 @@ export const fetchLoggedInFilteredUsers = async (filter: {
 };
 
 // 비로그인 필터된 회원목록 조회
-export const fetchPublicFilteredUsers = async (filter: {
-  region: string;
-  minAge: number;
-  maxAge: number;
-  minLikeCount: number;
-}): Promise<FilteredUser[]> => {
+export const fetchPublicFilteredUsers = async (
+  filter: FilterParams
+): Promise<FilteredUser[]> => {
   const res = await instance.get<{ users: FilteredUser[] }>(
     '/user-filter/public-filtered-list',
     {

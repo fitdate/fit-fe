@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useMemo,
-} from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   AdjustmentsHorizontalIcon,

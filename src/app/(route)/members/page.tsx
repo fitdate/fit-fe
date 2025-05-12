@@ -1,6 +1,12 @@
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import {
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
 import Link from 'next/link';
 import {
   AdjustmentsHorizontalIcon,
@@ -17,6 +23,7 @@ import { isAxiosError } from '@/lib/error';
 import { toast } from 'react-toastify';
 import { FilteredUser } from '@/types/member.type';
 import { useLikeStore } from '@/store/likeStore';
+import { useUserStatusStore } from '@/store/userStatusStore';
 
 const REGION = [
   '',
@@ -48,6 +55,7 @@ export default function MembersPage() {
   const [region, setRegion] = useState('');
   const [filteredUsers, setFilteredUsers] = useState<FilteredUser[]>([]);
   const [isFiltered, setIsFiltered] = useState(false);
+  const { userStatuses, fetchUserStatuses } = useUserStatusStore();
 
   const {
     data,
@@ -92,6 +100,15 @@ export default function MembersPage() {
       resetLikeChanged(); // 플래그 초기화
     }
   }, [likeChanged, refetch, resetLikeChanged]);
+  const userIds = useMemo(() => {
+    return uniqueUsers.map((user) => user.id);
+  }, [uniqueUsers]);
+
+  useEffect(() => {
+    if (userIds.length > 0) {
+      fetchUserStatuses(userIds);
+    }
+  }, [userIds, fetchUserStatuses]);
 
   useEffect(() => {
     if (usersError) {
@@ -254,11 +271,12 @@ export default function MembersPage() {
               }
             >
               <ProfileCard
+                userId={u.id}
                 name={u.nickname}
                 age={u.age}
                 likes={u.likeCount}
                 region={u.region}
-                isOnline
+                isOnline={userStatuses[u.id] || false}
                 profileImageUrl={u.profileImage ?? '/default.png'}
               />
             </Link>

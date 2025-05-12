@@ -61,13 +61,15 @@ export default function SignUpPage() {
     interest?.map((el: { id: number; name: string }) => el.name) ?? [];
   // console.log('관심사 : ', interestNames);
   const { data: feedback } = useFeedbackQuery();
-  const feedbackNames =
-    feedback?.map((el: { id: number; name: string }) => el.name) ?? [];
+  const feedbackNames = Array.from(
+    new Set(feedback?.map((el: { id: number; name: string }) => el.name) ?? [])
+  ) as string[];
   //console.log('피드백 ㅣ ', feedbackNames);
   const { data: introduce } = useIntroduceQuery();
   // console.log('저는 이런사람이에요 : ', introduce);
-  const introduceNames =
-    introduce?.map((el: { id: number; name: string }) => el.name) ?? [];
+  const introduceNames = Array.from(
+    new Set(introduce?.map((el: { id: number; name: string }) => el.name) ?? [])
+  ) as string[];
 
   const { mutate: sendVerificationEmail } = useEmailVerificationMutation();
   const { mutate: checkEmail } = useEmailCheckMutation((isAvailable) => {

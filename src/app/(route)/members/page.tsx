@@ -95,7 +95,7 @@ export default function MembersPage() {
       const userIds = uniqueUsers.map((user) => user.id);
       fetchUserStatuses(userIds);
     }
-  }, [uniqueUsers, fetchUserStatuses]);
+  }, [uniqueUsers.length, fetchUserStatuses]);
 
   useEffect(() => {
     if (usersError) {

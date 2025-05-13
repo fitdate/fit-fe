@@ -216,7 +216,7 @@ export default function FriendsPage() {
     useRoundCard = true,
     type: ProfileType = 'match'
   ) => (
-    <div className="grid grid-cols-3 gap-2 py-2">
+    <div className="grid grid-cols-3 gap-2 py-2 place-items-center">
       {profiles.map((profile) =>
         useRoundCard && onAccept && onReject ? (
           <ProfileCardRoundOne
@@ -324,7 +324,7 @@ export default function FriendsPage() {
           <h2 className="font-semibold text-lg">커피챗 신청</h2>
         </div>
         {renderProfileCards(
-          coffeeChatProfiles.slice(0, isCoffeeChatExpanded ? undefined : 2),
+          coffeeChatProfiles.slice(0, isCoffeeChatExpanded ? undefined : 3),
           handleCoffeeAccept,
           handleCoffeeReject,
           true,

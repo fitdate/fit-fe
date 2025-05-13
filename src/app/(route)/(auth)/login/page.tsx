@@ -6,6 +6,7 @@ import Button from '@/components/common/Button';
 import { useLoginMutation } from '@/hooks/mutations/useLoginMutation';
 import { LoginProps } from '@/services/login';
 import { toast } from 'react-toastify';
+import { handleSocialLogin } from '@/services/oauth';
 
 export default function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null);
@@ -28,6 +29,17 @@ export default function LoginPage() {
         toast.error('아이디 또는 비밀번호가 올바르지 않습니다.');
       },
     });
+  };
+
+  const handleSocialLoginClick = async (
+    provider: 'google' | 'kakao' | 'naver'
+  ) => {
+    try {
+      await handleSocialLogin(provider);
+    } catch (error) {
+      console.error(`${provider} 로그인 처리 중 오류:`, error);
+      toast.error('소셜 로그인 처리 중 오류가 발생했습니다.');
+    }
   };
 
   return (
@@ -79,7 +91,10 @@ export default function LoginPage() {
 
         <div className="space-y-3">
           {/* 네이버 로그인 */}
-          <button className="flex items-center justify-center w-full py-3 bg-[#03C75A] rounded text-white">
+          <button
+            onClick={() => handleSocialLoginClick('naver')}
+            className="flex items-center justify-center w-full py-3 bg-[#03C75A] rounded text-white"
+          >
             <div className="relative w-8 h-8 mr-2">
               <Image
                 src="/naver-logo.png"
@@ -92,7 +107,10 @@ export default function LoginPage() {
           </button>
 
           {/* 카카오 로그인 */}
-          <button className="flex items-center justify-center w-full py-3 bg-[#FEE500] rounded text-black">
+          <button
+            onClick={() => handleSocialLoginClick('kakao')}
+            className="flex items-center justify-center w-full py-3 bg-[#FEE500] rounded text-black"
+          >
             <div className="relative w-8 h-8 mr-2">
               <Image
                 src="/kakao-logo.png"
@@ -105,7 +123,10 @@ export default function LoginPage() {
           </button>
 
           {/* 구글 로그인 */}
-          <button className="flex items-center justify-center w-full py-3 border border-gray-300 rounded bg-white">
+          <button
+            onClick={() => handleSocialLoginClick('google')}
+            className="flex items-center justify-center w-full py-3 border border-gray-300 rounded bg-white"
+          >
             <div className="relative w-8 h-8 mr-2">
               <Image
                 src="/google-logo.png"

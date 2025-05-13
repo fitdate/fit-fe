@@ -141,7 +141,6 @@ export default function FriendsPage() {
         toast.error('서버 응답이 없습니다.');
         return;
       }
-
       const { id: chatRoomId} = response;
 
       if (!chatRoomId) {

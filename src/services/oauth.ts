@@ -4,7 +4,7 @@ import {
   OAuthLoginResponse,
   OAuthCallbackParams,
   OAuthEndpoints,
-} from '@/types/oauth';
+} from '@/types/oauth.type';
 
 const baseUrl = 'https://api.fit-date.co.kr/api/v1';
 

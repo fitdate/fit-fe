@@ -1,32 +1,40 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   OAuthProvider,
   OAuthLoginResponse,
   OAuthCallbackParams,
-} from '@/types/oauth';
+} from '@/types/oauth.type';
 import { handleSocialCallback } from '@/services/oauth';
 
-export default function OAuthCallbackPage({
+type SearchParams = {
+  code?: string;
+  state?: string;
+  scope?: string;
+};
+
+interface OAuthCallbackPageProps {
+  params: { provider: string };
+  searchParams: SearchParams;
+}
+
+const OAuthCallbackPage = ({
   params,
-}: {
-  params: { provider: OAuthProvider };
-}) {
+  searchParams,
+}: OAuthCallbackPageProps) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const { provider } = params;
+  const provider = params.provider as OAuthProvider;
 
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        const code = searchParams.get('code');
+        const { code } = searchParams;
         if (!code) {
           throw new Error('인증 코드가 없습니다.');
         }
 
-        // 제공자별 추가 파라미터 처리
         const additionalParams = getAdditionalParams(provider, searchParams);
 
         const result = await handleSocialCallback(
@@ -35,7 +43,6 @@ export default function OAuthCallbackPage({
           additionalParams
         );
 
-        // 제공자별 리다이렉트 처리
         await handleRedirect(provider, result, router);
       } catch (error) {
         console.error(`${provider} 로그인 콜백 처리 중 오류:`, error);
@@ -54,32 +61,30 @@ export default function OAuthCallbackPage({
       </div>
     </div>
   );
-}
+};
+
+export default OAuthCallbackPage;
 
 // 제공자별 추가 파라미터 처리
 function getAdditionalParams(
   provider: OAuthProvider,
-  searchParams: URLSearchParams
+  searchParams: SearchParams
 ): OAuthCallbackParams {
-  const code = searchParams.get('code') || '';
+  const { code } = searchParams;
   switch (provider) {
     case 'kakao':
-      return {
-        code,
-        state: searchParams.get('state') || undefined,
-      };
     case 'naver':
       return {
-        code,
-        state: searchParams.get('state') || undefined,
+        code: code!,
+        state: searchParams.state,
       };
     case 'google':
       return {
-        code,
-        scope: searchParams.get('scope') || undefined,
+        code: code!,
+        scope: searchParams.scope,
       };
     default:
-      return { code };
+      return { code: code! };
   }
 }
 
@@ -94,21 +99,5 @@ async function handleRedirect(
     return;
   }
 
-  // 제공자별 추가 리다이렉트 로직
-  switch (provider) {
-    case 'kakao':
-      // 카카오 특화 리다이렉트
-      router.push(result.redirectUrl);
-      break;
-    case 'naver':
-      // 네이버 특화 리다이렉트
-      router.push(result.redirectUrl);
-      break;
-    case 'google':
-      // 구글 특화 리다이렉트
-      router.push(result.redirectUrl);
-      break;
-    default:
-      router.push(result.redirectUrl);
-  }
+  router.push(result.redirectUrl);
 }

@@ -148,7 +148,6 @@ export default function FriendsPage() {
         toast.error('채팅방 ID를 가져올 수 없습니다.');
         return;
       }
-
       router.push(`/chats/${chatRoomId}?userId=${partnerId}`);
   }   catch (error) {
       if (isAxiosError(error) && error.response?.data?.message) {

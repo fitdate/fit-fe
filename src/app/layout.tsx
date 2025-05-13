@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import ReactQueryProvider from '@/lib/ReactQueryProvider';
 import { ToastContainer } from 'react-toastify';
+import SocketProvider from '@/components/providers/SocketProvider';
 
 export const metadata: Metadata = {
   title: 'Fit',
@@ -15,8 +16,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className="select-none [&_img]:drag-none">
-        <ReactQueryProvider>{children}</ReactQueryProvider>
+      <body className="select-none [&_img]:drag-none" suppressHydrationWarning>
+        <ReactQueryProvider>
+          <SocketProvider>{children}</SocketProvider>
+        </ReactQueryProvider>
         <ToastContainer
           position="top-center"
           autoClose={3000}

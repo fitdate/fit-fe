@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, FormEvent } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import {
   AdjustmentsHorizontalIcon,
@@ -10,13 +10,14 @@ import Button from '@/components/common/Button';
 import Divider from '@/components/common/Divider';
 import RangeSlider from '@/components/page/members/RangeSlider';
 import ProfileCard from '@/components/common/Profilecard';
-import {
-  fetchFilteredUsersFromGet,
-  fetchAnonymousUsers,
-  saveFilterSettings,
-  FilteredUser,
-} from '@/services/memeber';
-import { useAuthStore } from '@/store/authStore';
+import Spinner from '@/components/common/Spinner';
+import { useUsersQuery } from '@/hooks/queries/useUsersQuery';
+import { useFilterUsersMutation } from '@/hooks/mutations/useFilterUsersMutation';
+import { isAxiosError } from '@/lib/error';
+import { toast } from 'react-toastify';
+import { FilteredUser } from '@/types/member.type';
+import { useLikeStore } from '@/store/likeStore';
+import { useUserStatusStore } from '@/store/userStatusStore';
 
 const REGION = [
   '',
@@ -41,61 +42,124 @@ const REGION = [
 
 export default function MembersPage() {
   const [isShowFilter, setIsShowFilter] = useState(false);
-  const [users, setUsers] = useState<FilteredUser[]>([]);
-  // const [distance, setDistance] = useState(0); // 일단 사용 안함
-  const [age, setAge] = useState(20);
-  const [likes, setLikes] = useState(0);
+  const [minAge, setMinAge] = useState(20);
+  const [maxAge, setMaxAge] = useState(60);
+  const [minLikes, setMinLikes] = useState(0);
+  const [maxLikes, setMaxLikes] = useState(100);
   const [region, setRegion] = useState('');
-  const isLoggedIn = useAuthStore((state) => state.isLoggedIn);
+  const [filteredUsers, setFilteredUsers] = useState<FilteredUser[]>([]);
+  const [isFiltered, setIsFiltered] = useState(false);
+  const { userStatuses, fetchUserStatuses } = useUserStatusStore();
+
+  const {
+    data,
+    error: usersError,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch,
+  } = useUsersQuery({ take: 6 });
+  const { mutate: filterUsers } = useFilterUsersMutation();
+  const { likeChanged, resetLikeChanged } = useLikeStore();
+
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useCallback(
+    (node: HTMLAnchorElement) => {
+      if (observerRef.current) observerRef.current.disconnect();
+      observerRef.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !isFiltered) {
+          fetchNextPage();
+        }
+      });
+      if (node) observerRef.current.observe(node);
+    },
+    [fetchNextPage, isFiltered]
+  );
+
+  const users =
+    data?.pages
+      .flatMap((page) => page.users)
+      .reduce<Map<string, FilteredUser>>((acc, user) => {
+        if (!acc.has(user.id)) acc.set(user.id, user);
+        return acc;
+      }, new Map())
+      .values() ?? [];
+
+  const uniqueUsers = isFiltered ? filteredUsers : Array.from(users);
+
+  // ✅ 좋아요 변경되면 목록 새로고침
+  useEffect(() => {
+    if (likeChanged) {
+      refetch(); // 서버에서 다시 가져오기
+      resetLikeChanged(); // 플래그 초기화
+    }
+  }, [likeChanged, refetch, resetLikeChanged]);
+  const userIds = useMemo(() => {
+    return uniqueUsers.map((user) => user.id);
+  }, [uniqueUsers]);
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        let data: FilteredUser[] = [];
-        if (isLoggedIn) {
-          data = await fetchFilteredUsersFromGet();
-        } else {
-          data = await fetchAnonymousUsers();
-        }
-        setUsers(data);
-      } catch (err) {
-        console.error('사용자 목록 로드 실패:', err);
-      }
-    };
-    fetchUsers();
-  }, [isLoggedIn]);
+    if (userIds.length > 0) {
+      fetchUserStatuses(userIds);
+    }
+  }, [userIds, fetchUserStatuses]);
+
+  useEffect(() => {
+    if (usersError) {
+      const message = isAxiosError(usersError)
+        ? usersError.response?.data.message
+        : '사용자 목록을 불러오는데 실패했습니다.';
+      toast.error(message);
+    }
+  }, [usersError]);
 
   const toggleFilter = () => setIsShowFilter((v) => !v);
-  const resetFilter = () => {
-    // setDistance(0);
-    setAge(20);
-    setLikes(0);
-    setRegion('');
+
+  const handleApplyFilter = (e: React.FormEvent) => {
+    e.preventDefault();
+    const filter = {
+      region,
+      ageMin: minAge,
+      ageMax: maxAge,
+      minLikes,
+      maxLikes,
+      page: 1,
+      limit: 6,
+    };
+    setIsFiltered(true);
+    filterUsers(filter, {
+      onSuccess: (data) => {
+        setFilteredUsers(data);
+        toast.success('필터가 적용되었습니다.');
+        toggleFilter();
+      },
+      onError: (error) => {
+        const message = isAxiosError(error)
+          ? error.response?.data.message
+          : '필터 적용에 실패했습니다.';
+        toast.error(message);
+      },
+    });
   };
 
-  const applyFilter = async (e: FormEvent) => {
-    e.preventDefault();
-    try {
-      await saveFilterSettings({
-        region,
-        minAge: age,
-        maxAge: 60,
-        minLikeCount: likes,
-      });
-      const refreshedUsers = await fetchFilteredUsersFromGet();
-      setUsers(refreshedUsers);
-      toggleFilter();
-    } catch (err) {
-      console.error('필터 적용 실패:', err);
-    }
+  const resetFilter = () => {
+    setMinAge(20);
+    setMaxAge(60);
+    setMinLikes(0);
+    setMaxLikes(100);
+    setRegion('');
+    setFilteredUsers([]);
+    setIsFiltered(false);
+    refetch();
   };
 
   return (
     <div
       className={`relative w-full h-[calc(100vh-160px)] flex flex-col ${isShowFilter ? 'overflow-hidden' : ''}`}
     >
+      {/* 필터 모달 */}
       {isShowFilter && (
-        <div className="absolute inset-0 z-10 bg-zinc-900/80 px-8 py-10 flex items-center justify-center">
+        <div className="absolute inset-0 z-10 bg-zinc-900/80 flex items-center justify-center">
           <div className="bg-white rounded-3xl p-6 flex flex-col gap-6 w-full max-w-md">
             <div className="flex items-center">
               <h1 className="mx-auto text-lg font-semibold">필터</h1>
@@ -107,7 +171,7 @@ export default function MembersPage() {
               />
             </div>
             <Divider />
-            <form className="flex flex-col gap-7" onSubmit={applyFilter}>
+            <form className="flex flex-col gap-7" onSubmit={handleApplyFilter}>
               <div className="flex flex-col">
                 <label htmlFor="region" className="font-medium mb-1">
                   지역
@@ -125,19 +189,6 @@ export default function MembersPage() {
                   ))}
                 </select>
               </div>
-
-              {/* <RangeSlider
-                id="distance"
-                name="distance"
-                label="거리"
-                min={0}
-                max={10}
-                step={1}
-                value={distance}
-                unit="km"
-                rangeText="0km ~ 10km"
-                onChange={setDistance}
-              /> */}
               <RangeSlider
                 id="age"
                 name="age"
@@ -145,10 +196,14 @@ export default function MembersPage() {
                 min={20}
                 max={60}
                 step={1}
-                value={age}
+                minValue={minAge}
+                maxValue={maxAge}
                 unit="세"
                 rangeText="20세 ~ 60세"
-                onChange={setAge}
+                onInput={(min, max) => {
+                  setMinAge(min);
+                  setMaxAge(max);
+                }}
               />
               <RangeSlider
                 id="likes"
@@ -157,12 +212,15 @@ export default function MembersPage() {
                 min={0}
                 max={100}
                 step={1}
-                value={likes}
+                minValue={minLikes}
+                maxValue={maxLikes}
                 unit="개"
                 rangeText="0개 ~ 100개"
-                onChange={setLikes}
+                onInput={(min, max) => {
+                  setMinLikes(min);
+                  setMaxLikes(max);
+                }}
               />
-
               <div className="flex gap-3">
                 <Button
                   variant="outline"
@@ -182,6 +240,7 @@ export default function MembersPage() {
         </div>
       )}
 
+      {/* 목록 */}
       <div className="w-full py-10 px-8 flex flex-col">
         <div className="flex justify-between items-center">
           <h1 className="font-semibold">접속 중인 이성</h1>
@@ -195,19 +254,34 @@ export default function MembersPage() {
         <p className="text-gray-400 text-sm">새로운 인연을 찾아 보세요!</p>
 
         <div className="flex flex-wrap gap-7 pt-5">
-          {users.map((u) => (
-            <Link key={u.id} href={`/members/${u.id}`}>
+          {uniqueUsers.map((u, index) => (
+            <Link
+              key={u.id}
+              href={`/members/${u.id}`}
+              ref={
+                index === uniqueUsers.length - 1 && hasNextPage
+                  ? lastElementRef
+                  : undefined
+              }
+            >
               <ProfileCard
+                userId={u.id}
                 name={u.nickname}
                 age={u.age}
                 likes={u.likeCount}
                 region={u.region}
-                isOnline={true}
+                isOnline={userStatuses[u.id] || false}
                 profileImageUrl={u.profileImage ?? '/default.png'}
               />
             </Link>
           ))}
         </div>
+
+        {isFetchingNextPage && (
+          <div className="text-center py-4">
+            <Spinner size="sm" color="primary" />
+          </div>
+        )}
       </div>
     </div>
   );

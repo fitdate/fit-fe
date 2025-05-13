@@ -2,7 +2,7 @@
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
-import { socket } from '@/lib/socket';
+import { chatSocket } from '@/lib/socket';
 import { useSearchParams } from 'next/navigation';
 import Button from '@/components/common/Button';
 import Spinner from '@/components/common/Spinner';
@@ -10,6 +10,9 @@ import { Message, ChatRoomProps } from '@/types/chats.type';
 import { Message as MessageComponent } from '@/components/page/chats/Message';
 import { useGetChatMessagesQuery } from '@/hooks/queries/useGetChatMessagesQuery';
 import { useGetUserRegionFestivalsQuery } from '@/hooks/queries/useGetUserRegionFestivalsQuery';
+import { toast } from 'react-toastify';
+import { isAxiosError } from '@/lib/error';
+import Pagination from '@/components/page/chats/Pagination';
 
 // 날짜 포맷 변환 함수
 const formatDate = (dateStr: string) =>
@@ -23,20 +26,38 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [festivalPage, setFestivalPage] = useState(1);
   const festivalsPerPage = 2;
-  const pageButtonLimit = 5;
 
-  const { data: chatRoomData, isLoading: isChatLoading } =
-    useGetChatMessagesQuery(chatRoomId, userId);
-  const { data: festivalData } = useGetUserRegionFestivalsQuery(userId || '');
+  const {
+    data: chatRoomData,
+    isLoading: isChatLoading,
+    error: chatError,
+  } = useGetChatMessagesQuery(chatRoomId, userId);
+  const { data: festivalData, error: festivalError } =
+    useGetUserRegionFestivalsQuery(userId || '');
   const [messages, setMessages] = useState<Message[]>([]);
+
+  useEffect(() => {
+    if (chatError) {
+      if (isAxiosError(chatError)) {
+        const errorMessage = chatError.response?.data?.message;
+        toast.error(errorMessage || '채팅방 정보를 불러오는데 실패했습니다.');
+      } else {
+        toast.error('채팅방 정보를 불러오는데 실패했습니다.');
+      }
+    }
+
+    if (festivalError) {
+      if (isAxiosError(festivalError)) {
+        const errorMessage = festivalError.response?.data?.message;
+        toast.error(errorMessage || '축제 정보를 불러오는데 실패했습니다.');
+      } else {
+        toast.error('축제 정보를 불러오는데 실패했습니다.');
+      }
+    }
+  }, [chatError, festivalError]);
 
   // 채팅방 메시지 초기 데이터 설정 및 스크롤
   useEffect(() => {
-    console.log('메시지 초기화 useEffect 실행', {
-      chatRoomDataMessages: chatRoomData?.messages?.length,
-      festivalData: festivalData?.length,
-    });
-
     if (chatRoomData?.messages) {
       // 축제 정보를 메시지 형태로 변환
       const festivalMessage: Message = {
@@ -56,41 +77,33 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
         scrollToBottom();
       }, 100);
     }
-  }, [chatRoomData, festivalData]);
+  }, [chatRoomData, festivalData, chatRoomId]);
 
   // 새 메시지 추가 시 스크롤 최하단으로 이동
   useEffect(() => {
-    console.log('스크롤 useEffect 실행', {
-      messagesLength: messages.length,
-      lastMessage: messages[messages.length - 1]?.content,
-    });
     scrollToBottom();
   }, [messages]);
 
   // 소켓 연결 및 메시지 수신 설정
   useEffect(() => {
-    console.log('소켓 연결 useEffect 실행', { userId, chatRoomId });
     if (!userId) return;
 
-    socket.connect();
+    chatSocket.connect();
 
-    socket.on('connect', () => {
-      console.log('소켓 연결됨');
+    chatSocket.on('connect', () => {
       setIsConnected(true);
-      socket.emit('join', {
+      chatSocket.emit('join', {
         chatRoomId,
         userId,
       });
     });
 
-    socket.on('message', (message: Message) => {
-      console.log('새 메시지 수신', message);
+    chatSocket.on('message', (message: Message) => {
       setMessages((prev) => [...prev, message]);
     });
 
     return () => {
-      console.log('소켓 연결 해제');
-      socket.disconnect();
+      chatSocket.disconnect();
     };
   }, [chatRoomId, userId]);
 
@@ -102,15 +115,19 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
     e.preventDefault();
     if (!inputMessage.trim() || !userId) return;
 
-    socket.emit('message', {
-      content: inputMessage,
-      userId,
-      chatRoomId,
-      profileImage: chatRoomData?.partner?.profileImage || '/default.png',
-      name: chatRoomData?.partner?.name || '알 수 없음',
-    });
+    try {
+      chatSocket.emit('message', {
+        content: inputMessage,
+        userId,
+        chatRoomId,
+        profileImage: chatRoomData?.partner?.profileImage || '/default.png',
+        name: chatRoomData?.partner?.name || '알 수 없음',
+      });
 
-    setInputMessage('');
+      setInputMessage('');
+    } catch {
+      toast.error('메시지 전송에 실패했습니다.');
+    }
   };
 
   if (isChatLoading || !isConnected) {
@@ -120,6 +137,15 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
       </div>
     );
   }
+  if (messages.length === 0) {
+  return (
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] text-gray-400">
+      <p>아직 대화가 없습니다.</p>
+      <p>첫 번째 메시지를 보내보세요!</p>
+    </div>
+  );
+}
+
 
   return (
     <div className="flex flex-col h-[calc(100vh-160px)] bg-violet-100">
@@ -168,71 +194,14 @@ export const ChatRoom = ({ chatRoomId }: ChatRoomProps) => {
                     </div>
                   ))}
               </div>
-              {/* 페이지네이션 */}
-              {message.festivals.length > festivalsPerPage &&
-                (() => {
-                  const totalPages = Math.ceil(
-                    message.festivals.length / festivalsPerPage
-                  );
-                  const currentGroup = Math.floor(
-                    (festivalPage - 1) / pageButtonLimit
-                  );
-                  const startPage = currentGroup * pageButtonLimit + 1;
-                  const endPage = Math.min(
-                    startPage + pageButtonLimit - 1,
-                    totalPages
-                  );
-                  const pageNumbers = [];
-                  for (let i = startPage; i <= endPage; i++) {
-                    pageNumbers.push(i);
-                  }
-                  return (
-                    <div className="flex gap-2 mt-4 justify-center">
-                      <button
-                        className={`px-3 py-1 rounded transition-colors duration-150 ${
-                          startPage === 1
-                            ? 'bg-transparent text-gray-300 cursor-not-allowed'
-                            : 'bg-transparent text-gray-500 hover:bg-violet-100 hover:text-violet-600'
-                        }`}
-                        onClick={() => {
-                          if (startPage !== 1) setFestivalPage(startPage - 1);
-                        }}
-                        disabled={startPage === 1}
-                        aria-label="이전 페이지 그룹"
-                      >
-                        &lt;
-                      </button>
-                      {pageNumbers.map((num) => (
-                        <button
-                          key={num}
-                          className={`px-3 py-1 rounded ${
-                            festivalPage === num
-                              ? 'bg-violet-500 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-violet-100 hover:text-violet-600'
-                          }`}
-                          onClick={() => setFestivalPage(num)}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                      <button
-                        className={`px-3 py-1 rounded transition-colors duration-150 ${
-                          endPage === totalPages
-                            ? 'bg-transparent text-gray-300 cursor-not-allowed'
-                            : 'bg-transparent text-gray-500 hover:bg-violet-100 hover:text-violet-600'
-                        }`}
-                        onClick={() => {
-                          if (endPage !== totalPages)
-                            setFestivalPage(endPage + 1);
-                        }}
-                        disabled={endPage === totalPages}
-                        aria-label="다음 페이지 그룹"
-                      >
-                        &gt;
-                      </button>
-                    </div>
-                  );
-                })()}
+              {message.festivals.length > festivalsPerPage && (
+                <Pagination
+                  currentPage={festivalPage}
+                  totalItems={message.festivals.length}
+                  itemsPerPage={festivalsPerPage}
+                  onPageChange={setFestivalPage}
+                />
+              )}
             </div>
           ) : (
             <MessageComponent

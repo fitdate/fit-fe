@@ -6,6 +6,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { confirmPayment } from '@/services/payment';
 import Spinner from '@/components/common/Spinner';
+import { isAxiosError } from '@/lib/error';
+import { toast } from 'react-toastify';
 
 function SuccessContent() {
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -27,7 +29,8 @@ function SuccessContent() {
         !customerName ||
         !customerMobilePhone
       ) {
-        throw new Error('필수 결제 정보가 누락되었습니다.');
+        toast.error('필수 결제 정보가 누락되었습니다.');
+        return;
       }
 
       await confirmPayment({
@@ -41,12 +44,17 @@ function SuccessContent() {
 
       setIsConfirmed(true);
     } catch (error) {
-      console.error('결제 승인 실패:', error);
+      if (isAxiosError(error)) {
+        const errorMessage = error.response?.data?.message;
+        toast.error(errorMessage || '결제 승인에 실패했습니다.');
+      } else {
+        toast.error('결제 승인에 실패했습니다.');
+      }
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-50 flex items-center justify-center p-6">
+    <div className="fixed inset-0 bg-gray-50 flex items-center justify-center p-6 z-50">
       <div className="w-full max-w-2xl">
         {isConfirmed ? (
           <div className="bg-white rounded-2xl shadow-lg p-8">

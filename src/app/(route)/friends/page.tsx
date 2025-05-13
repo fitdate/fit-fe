@@ -17,6 +17,9 @@ import {
   acceptCoffeeChatRequest,
   rejectCoffeeChatRequest,
 } from '@/services/chat';
+import { isAxiosError } from '@/lib/error';
+import { toast } from 'react-toastify';
+import { useUserStatusStore } from '@/store/userStatusStore';
 
 interface SparkUser {
   id: string;
@@ -30,8 +33,9 @@ interface SparkUser {
 }
 
 type ProfileType = 'match' | 'like' | 'coffee';
-// eslint-disable-next-line no-unused-vars
-type AcceptFn = ((id: string) => void) | ((chatId: string, userId: string) => void);
+type AcceptFn =
+  // eslint-disable-next-line no-unused-vars
+  ((id: string) => void) | ((chatId: string, userId: string) => void);
 
 const removeDuplicates = (list: SparkUser[]) => {
   const seen = new Set();
@@ -51,14 +55,13 @@ const getKoreanAge = (birthday: string | null): number => {
 
 export default function FriendsPage() {
   const router = useRouter();
-
   const [roundProfiles, setRoundProfiles] = useState<SparkUser[]>([]);
   const [likeProfiles, setLikeProfiles] = useState<SparkUser[]>([]);
   const [coffeeChatProfiles, setCoffeeChatProfiles] = useState<SparkUser[]>([]);
-
   const [isRoundExpanded, setIsRoundExpanded] = useState(false);
   const [isLikeExpanded, setIsLikeExpanded] = useState(false);
   const [isCoffeeChatExpanded, setIsCoffeeChatExpanded] = useState(false);
+  const { userStatuses, fetchUserStatuses } = useUserStatusStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -108,10 +111,23 @@ export default function FriendsPage() {
       setRoundProfiles(removeDuplicates(simplifiedMatchList));
       setLikeProfiles(removeDuplicates(simplifiedLikeList));
       setCoffeeChatProfiles(removeDuplicates(simplifiedCoffeeChatList));
+
+      // 프로필 설정 후 모든 사용자 ID를 상태 업데이트 요청
+      const allProfileIds = [
+        ...simplifiedMatchList.map((p) => p.id),
+        ...simplifiedLikeList.map((p) => p.id),
+        ...simplifiedCoffeeChatList.map((p) => p.id),
+      ];
+
+      // 중복 제거
+      const uniqueUserIds = [...new Set(allProfileIds)];
+      if (uniqueUserIds.length > 0) {
+        fetchUserStatuses(uniqueUserIds);
+      }
     };
 
     fetchData();
-  }, []);
+  }, [fetchUserStatuses]);
 
   const handleClickMemberDetailMove = (id: string) => {
     router.push(`/members/${id}`);
@@ -119,14 +135,17 @@ export default function FriendsPage() {
 
   const handleAccept = async (id: string) => {
     try {
-      const response = await acceptMatchRequest(id);
-      console.log('매칭 수락 응답:', response.data);
-      const { isSuccess } = response.data;
-      console.log('isSuccess 값:', isSuccess);
-
+      await acceptMatchRequest(id);
       router.push(`/chats/${id}`);
     } catch (error) {
-      console.error('매칭 수락 실패:', error);
+      if (isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+        if (error.response.data.message.includes('이미 채팅방이 있습니다')) {
+          setRoundProfiles((prev) => prev.filter((user) => user.id !== id));
+        }
+      } else {
+        toast.error('매칭 수락 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -135,7 +154,11 @@ export default function FriendsPage() {
       const response = await passMatchRequest(id);
       router.push(`/matching-result?success=${response.data.isSuccess}`);
     } catch (error) {
-      console.error('거절 실패:', error);
+      if (isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('매칭 거절 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -145,17 +168,31 @@ export default function FriendsPage() {
       const chatRoomId = res.chatRoomId ?? userId;
       router.push(`/chats/${chatRoomId}?userId=${userId}`);
     } catch (error) {
-      console.error('커피챗 수락 실패:', error);
+      if (isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+        // 이미 채팅방이 있는 경우 해당 유저를 목록에서 제거
+        if (error.response.data.message.includes('이미 채팅방이 있습니다')) {
+          setCoffeeChatProfiles((prev) =>
+            prev.filter((user) => user.id !== userId)
+          );
+        }
+      } else {
+        toast.error('커피챗 수락 중 오류가 발생했습니다.');
+      }
     }
   };
 
   const handleCoffeeReject = async (id: string) => {
     try {
       await rejectCoffeeChatRequest(id);
-      alert('커피챗 거절 완료!');
+      toast.success('커피챗 거절 완료!');
       setCoffeeChatProfiles((prev) => prev.filter((user) => user.id !== id));
     } catch (error) {
-      console.error('커피챗 거절 실패:', error);
+      if (isAxiosError(error) && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('커피챗 거절 중 오류가 발생했습니다.');
+      }
     }
   };
 
@@ -167,7 +204,7 @@ export default function FriendsPage() {
     useRoundCard = true,
     type: ProfileType = 'match'
   ) => (
-    <div className="grid grid-cols-3 gap-2 py-2">
+    <div className="grid grid-cols-3 gap-2 py-2 place-items-center">
       {profiles.map((profile) =>
         useRoundCard && onAccept && onReject ? (
           <ProfileCardRoundOne
@@ -181,11 +218,14 @@ export default function FriendsPage() {
             onAccept={() => {
               if (type === 'coffee') {
                 if (!profile.coffeeChatId) {
-                  console.warn('⚠️ 커피챗 ID 없음:', profile);
+                  toast.error('커피챗 ID가 없습니다.');
                   return;
                 }
                 // eslint-disable-next-line no-unused-vars
-                (onAccept as (chatId: string, userId: string) => void)(profile.coffeeChatId, profile.id);
+                (onAccept as (chatId: string, userId: string) => void)(
+                  profile.coffeeChatId,
+                  profile.id
+                );
               } else {
                 // eslint-disable-next-line no-unused-vars
                 (onAccept as (id: string) => void)(profile.id);
@@ -200,11 +240,12 @@ export default function FriendsPage() {
             className="cursor-pointer"
           >
             <ProfileCard
+              userId={profile.id}
               name={profile.nickname}
               age={getKoreanAge(profile.birthday)}
               region={profile.region}
               likes={profile.likeCount}
-              isOnline={true}
+              isOnline={userStatuses[profile.id] || false}
               profileImageUrl={profile.profileImage}
             />
           </div>
@@ -271,7 +312,7 @@ export default function FriendsPage() {
           <h2 className="font-semibold text-lg">커피챗 신청</h2>
         </div>
         {renderProfileCards(
-          coffeeChatProfiles.slice(0, isCoffeeChatExpanded ? undefined : 2),
+          coffeeChatProfiles.slice(0, isCoffeeChatExpanded ? undefined : 3),
           handleCoffeeAccept,
           handleCoffeeReject,
           true,

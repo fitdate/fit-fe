@@ -2,12 +2,14 @@
 
 import Button from '@/components/common/Button';
 import TagBadge from '@/components/common/TagBadge';
-import { useGetChatRoomDataMutation } from '@/hooks/mutation/useChatRoomDataMutation';
+import { useGetChatRoomDataMutation } from '@/hooks/mutations/useChatRoomDataMutation';
 import { useGetChatRoomQuery } from '@/hooks/queries/useGetChatRoomQuery';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Spinner from '@/components/common/Spinner';
 import { ChatRoomType, ChatRoomResponse } from '@/types/chats.type';
+import { isAxiosError } from '@/lib/error';
+import { toast } from 'react-toastify';
 
 export default function ChatsPage() {
   const { data, isError, isPending } = useGetChatRoomQuery();
@@ -62,7 +64,12 @@ export default function ChatsPage() {
         router.push(`/chats/${data.id}?userId=${userId}`);
       },
       onError: (error) => {
-        console.error('❌ 채팅방 입장 실패:', error);
+        if (isAxiosError(error)) {
+          const errorMessage = error.response?.data?.message;
+          toast.error(errorMessage || '채팅방 입장에 실패했습니다.');
+        } else {
+          toast.error('채팅방 입장에 실패했습니다.');
+        }
       },
     });
   };

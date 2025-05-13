@@ -3,8 +3,9 @@
 import React, { FormEvent, useRef } from 'react';
 import Image from 'next/image';
 import Button from '@/components/common/Button';
-import { useLoginMutation } from '@/hooks/mutation/useLoginMutation';
+import { useLoginMutation } from '@/hooks/mutations/useLoginMutation';
 import { LoginProps } from '@/services/login';
+import { toast } from 'react-toastify';
 
 export default function LoginPage() {
   const emailRef = useRef<HTMLInputElement>(null);
@@ -22,11 +23,11 @@ export default function LoginPage() {
       password,
     };
 
-    try {
-      mutate(loginData);
-    } catch (error) {
-      console.log('로그인 기능 에러 : ', error);
-    }
+    mutate(loginData, {
+      onError: () => {
+        toast.error('아이디 또는 비밀번호가 올바르지 않습니다.');
+      },
+    });
   };
 
   return (
@@ -65,11 +66,11 @@ export default function LoginPage() {
             회원가입
           </a>
           <span>|</span>
-          <a href="/find-id" className="hover:underline">
-            아이디 찾기
+          <a href="/login/find-email" className="hover:underline">
+            이메일 찾기
           </a>
           <span>|</span>
-          <a href="/find-password" className="hover:underline">
+          <a href="/login/find-password" className="hover:underline">
             비밀번호 찾기
           </a>
         </div>

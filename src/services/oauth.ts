@@ -43,8 +43,12 @@ export const handleSocialLogin = async (
   const config = OAUTH_CONFIG[provider];
   const endpoint = OAUTH_ENDPOINTS[provider].auth;
 
+  if (!config.client_id) {
+    throw new Error(`${provider} 클라이언트 ID가 설정되지 않았습니다.`);
+  }
+
   const params = new URLSearchParams({
-    client_id: config.client_id!,
+    client_id: config.client_id,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: config.scope,
@@ -69,6 +73,6 @@ export const handleSocialCallback = async (
     return response.data;
   } catch (error) {
     console.error(`${provider} 로그인 콜백 처리 중 오류:`, error);
-    throw error;
+    throw new Error(`${provider} 로그인 처리 중 오류가 발생했습니다.`);
   }
 };

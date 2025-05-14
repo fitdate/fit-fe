@@ -6,7 +6,7 @@ import SocialGenderSelector from '@/components/page/social/SocialGenderSelector'
 import SocialRegionSelector from '@/components/page/social/SocialRegionSelector';
 import Button from '@/components/common/Button';
 import SocialMultiToggleButtonGroup from '@/components/page/social/SocialMultiToggleButtonGroup';
-import React, { ChangeEvent, useEffect, useState } from 'react';
+import React, { ChangeEvent, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import {
   useSignUpMutation,
@@ -62,12 +62,12 @@ export default function SignUpPage() {
 
   const { mutate: uploadImage } = useUploadImageMutataion();
 
-  const validateImages = () => {
+  const validateImages = useCallback(() => {
     const uploadedCount = images.filter(Boolean).length;
     const valid = uploadedCount >= 2;
     setIsImageValid(valid);
     setError(valid ? null : '최소 2장의 이미지를 등록해야 합니다.');
-  };
+  }, [images]);
 
   const formatPhoneNumber = (value: string) => {
     const onlyNums = value.replace(/\D/g, '');
@@ -149,7 +149,7 @@ export default function SignUpPage() {
 
   useEffect(() => {
     validateImages();
-  }, [images]);
+  }, [images, validateImages]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-rose-50 py-10 px-5">

@@ -1,6 +1,5 @@
 export type OAuthProvider = 'google' | 'kakao' | 'naver';
 export type OAuthEndpoints = Record<OAuthProvider, OAuthEndpoint>;
-
 export interface OAuthLoginResponse {
   accessToken: string;
   refreshToken: string;

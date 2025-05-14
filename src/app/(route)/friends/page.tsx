@@ -149,13 +149,13 @@ export default function FriendsPage() {
       return;
     }
 
-    const myUserId = useAuthStore.getState().user?.id; // ✅ 여기서 내 id 가져오기
+    const myUserId = useAuthStore.getState().user?.id; //  여기서 내 id 가져오기
     if (!myUserId) {
       toast.error('로그인이 필요합니다.');
       return;
     }
 
-    router.push(`/chats/${chatRoomId}?userId=${myUserId}`); // ✅ 무조건 "내 userId" 넣기
+    router.push(`/chats/${chatRoomId}?userId=${myUserId}`); //  무조건 "내 userId" 넣기
   } catch (error) {
     if (isAxiosError(error) && error.response?.data?.message) {
       toast.error(error.response.data.message);

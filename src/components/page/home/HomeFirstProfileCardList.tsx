@@ -85,7 +85,6 @@ export default function HomeFirstProfileCardList({
         }
       }
     };
-
   const handleSelectAllLocal = async () => {
     if (!isLoggedIn) {
       setShowLoginAlert(true);

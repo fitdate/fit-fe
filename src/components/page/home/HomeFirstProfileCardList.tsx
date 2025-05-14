@@ -85,13 +85,14 @@ export default function HomeFirstProfileCardList({
         }
       }
     };
-    
+
   const handleSelectAllLocal = async () => {
     if (!isLoggedIn) {
       setShowLoginAlert(true);
       return;
     }
 
+    
     if (!firstUser || !secondUser || !firstUser.matchId) return;
 
     try {

@@ -8,10 +8,8 @@ import Button from '@/components/common/Button';
 import SocialMultiToggleButtonGroup from '@/components/page/social/SocialMultiToggleButtonGroup';
 import React, { ChangeEvent, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
-import {
-  useSocialSignUpMutation,
-  useUploadImageMutataion,
-} from '@/hooks/mutations/useSignUpMutation';
+import { useUploadImageMutataion } from '@/hooks/mutations/useSignUpMutation';
+import { useSocialSignUpMutation } from '@/hooks/mutations/useSocialSignUpMutation';
 import { SocialSignUpFormValues } from '@/types/social.type';
 import { toast } from 'react-toastify';
 import {

@@ -5,6 +5,8 @@ import { userStatusSocket } from '@/lib/socket';
 interface AuthUser {
   id: string;
   nickname: string;
+  email?: string;
+  role?: string;
 }
 
 interface AuthState {
@@ -29,10 +31,19 @@ export const useAuthStore = create<AuthState>()(
 
       login: (token, user) => {
         console.log('authStore login 호출:', { token, user });
+
+        // 사용자 정보 정규화
+        const normalizedUser: AuthUser = {
+          id: user.id,
+          nickname: user.nickname || '',
+          email: user.email,
+          role: user.role,
+        };
+
         set({
           isLoggedIn: true,
           accessToken: token,
-          user: user,
+          user: normalizedUser,
         });
 
         // 토큰이 유효할 때만 소켓 연결

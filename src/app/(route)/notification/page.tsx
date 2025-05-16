@@ -40,17 +40,18 @@ function NotificationItem({
       return;
     }
     if (notification.type === 'CHAT') {
-     router.push(
-      `/chats/${notification.data.chatRoomId}?userId=${notification.data.senderId}`
-    );
+      router.push(
+        `/chats/${notification.data.chatRoomId}?userId=${notification.data.senderId}`
+      );
     }
     if (notification.type === 'COFFEE_CHAT_ACCEPT') {
       router.push(
-      `/chats/${notification.data.chatRoomId}?userId=${notification.data.senderId}`);
+        `/chats/${notification.data.chatRoomId}?userId=${notification.data.senderId}`
+      );
       return;
     }
-     if (notification.type === 'COFFEE_CHAT_REQUEST') {
-     router.push('/friends');
+    if (notification.type === 'COFFEE_CHAT_REQUEST') {
+      router.push('/friends');
       return;
     }
   };
@@ -113,9 +114,20 @@ export default function NotificationPage() {
           if (Array.isArray(parsed)) {
             // 전체 알림 리스트를 다시 받을 때
             setNotifications(parsed);
+            // 알림이 없으면 SSE 연결 종료
+            if (parsed.length === 0 && eventSource) {
+              eventSource.close();
+            }
           } else {
             // 새 알림 한 건
-            setNotifications((prev) => [parsed, ...prev]);
+            setNotifications((prev) => {
+              const newNotifications = [parsed, ...prev];
+              // 알림이 없었다가 새로 생기면 SSE 연결 시작
+              if (prev.length === 0) {
+                connectSSE();
+              }
+              return newNotifications;
+            });
           }
           setError(null);
         } catch {
@@ -139,13 +151,17 @@ export default function NotificationPage() {
         const data = await fetchNotifications();
         setNotifications(data);
         setError(null);
+
+        // 알림이 있을 때만 SSE 연결
+        if (data.length > 0) {
+          connectSSE();
+        }
       } catch {
         setError('알림을 불러오는데 실패했습니다. 다시 시도해주세요.');
       }
     };
 
     loadNotifications();
-    connectSSE();
 
     return () => {
       if (eventSource) {

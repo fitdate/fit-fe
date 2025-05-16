@@ -1,41 +1,37 @@
-'use client';
-
 import { OAuthProvider } from '@/types/oauth.type';
 import OAuthCallback from '@/components/page/callback/OAuthCallback';
 
 interface Props {
-  params: {
-    provider: string;
-  };
-  searchParams: {
-    code?: string;
-    state?: string;
-    scope?: string;
-  };
+  params: Promise<{ provider: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default function OAuthCallbackPage({ params, searchParams }: Props) {
-  const { provider } = params;
+export default async function OAuthCallbackPage({
+  params,
+  searchParams,
+}: Props) {
+  const { provider } = await params;
+  const resolvedSearchParams = await searchParams;
 
-  console.log('소셜 로그인 콜백 페이지:', {
-    provider,
-    searchParams,
-  });
-
-  const code = searchParams.code;
-  const state = searchParams.state;
-  const scope = searchParams.scope;
-
-  console.log('파싱된 파라미터:', { code, state, scope });
+  const code =
+    typeof resolvedSearchParams.code === 'string'
+      ? resolvedSearchParams.code
+      : undefined;
+  const state =
+    typeof resolvedSearchParams.state === 'string'
+      ? resolvedSearchParams.state
+      : undefined;
+  const scope =
+    typeof resolvedSearchParams.scope === 'string'
+      ? resolvedSearchParams.scope
+      : undefined;
 
   return (
-    <div className="w-full h-[calc(100vh-160px)] flex items-center justify-center">
-      <OAuthCallback
-        provider={provider as OAuthProvider}
-        code={code}
-        state={state}
-        scope={scope}
-      />
-    </div>
+    <OAuthCallback
+      provider={provider as OAuthProvider}
+      code={code}
+      state={state}
+      scope={scope}
+    />
   );
 }

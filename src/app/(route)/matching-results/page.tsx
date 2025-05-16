@@ -92,6 +92,7 @@ export default function MatchingResultsPage() {
     );
   }
 
+  
   return (
     <div className="relative w-full min-h-full flex flex-col">
       {/* 성공 팝업 */}

@@ -10,6 +10,7 @@ import {
 } from '@/services/notification';
 import { useAuthStore } from '@/store/authStore';
 import { Notification } from '@/types/notification.type';
+import Spinner from '@/components/common/Spinner';
 
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleString('ko-KR', {
@@ -90,6 +91,7 @@ function NotificationItem({
 export default function NotificationPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuthStore();
   const userId = user?.id;
 
@@ -112,7 +114,6 @@ export default function NotificationPage() {
         try {
           const parsed = JSON.parse(event.data);
           if (Array.isArray(parsed)) {
-            // 전체 알림 리스트를 다시 받을 때
             setNotifications(parsed);
             // 알림이 없으면 SSE 연결 종료
             if (parsed.length === 0 && eventSource) {
@@ -148,6 +149,7 @@ export default function NotificationPage() {
 
     const loadNotifications = async () => {
       try {
+        setIsLoading(true);
         const data = await fetchNotifications();
         setNotifications(data);
         setError(null);
@@ -158,6 +160,8 @@ export default function NotificationPage() {
         }
       } catch {
         setError('알림을 불러오는데 실패했습니다. 다시 시도해주세요.');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -192,6 +196,17 @@ export default function NotificationPage() {
       }
     }
   };
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-white p-4 max-w-md mx-auto">
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-160px)]">
+          <Spinner size="lg" color="primary" />
+          <p className="text-gray-500 mt-4">알림을 불러오는 중...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (!userId) {
     return (

@@ -3,15 +3,18 @@
 import { OAuthProvider } from '@/types/oauth.type';
 import OAuthCallback from '@/components/page/callback/OAuthCallback';
 
-interface OAuthCallbackPageProps {
-  params: { provider: string };
-  searchParams: Record<string, string | string[] | undefined>;
+interface Props {
+  params: {
+    provider: string;
+  };
+  searchParams: {
+    code?: string;
+    state?: string;
+    scope?: string;
+  };
 }
 
-export default function OAuthCallbackPage({
-  params,
-  searchParams,
-}: OAuthCallbackPageProps) {
+export default function OAuthCallbackPage({ params, searchParams }: Props) {
   const { provider } = params;
 
   console.log('소셜 로그인 콜백 페이지:', {
@@ -19,12 +22,9 @@ export default function OAuthCallbackPage({
     searchParams,
   });
 
-  const code =
-    typeof searchParams.code === 'string' ? searchParams.code : undefined;
-  const state =
-    typeof searchParams.state === 'string' ? searchParams.state : undefined;
-  const scope =
-    typeof searchParams.scope === 'string' ? searchParams.scope : undefined;
+  const code = searchParams.code;
+  const state = searchParams.state;
+  const scope = searchParams.scope;
 
   console.log('파싱된 파라미터:', { code, state, scope });
 

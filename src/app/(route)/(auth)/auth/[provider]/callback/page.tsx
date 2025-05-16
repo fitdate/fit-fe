@@ -1,7 +1,7 @@
 import { OAuthProvider } from '@/types/oauth.type';
 import OAuthCallback from '@/components/page/callback/OAuthCallback';
 
-interface OAuthCallbackPageProps {
+interface Props {
   params: Promise<{ provider: string }>;
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
@@ -9,7 +9,7 @@ interface OAuthCallbackPageProps {
 export default async function OAuthCallbackPage({
   params,
   searchParams,
-}: OAuthCallbackPageProps) {
+}: Props) {
   const { provider } = await params;
   const resolvedSearchParams = await searchParams;
 

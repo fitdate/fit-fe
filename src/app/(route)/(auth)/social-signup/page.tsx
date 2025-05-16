@@ -9,10 +9,10 @@ import SocialMultiToggleButtonGroup from '@/components/page/social/SocialMultiTo
 import React, { ChangeEvent, useEffect, useState, useCallback } from 'react';
 import Image from 'next/image';
 import {
-  useSignUpMutation,
-  useUploadImageMutataion,
-} from '@/hooks/mutations/useSignUpMutation';
-import { SignUpFormValues } from '@/types/signUp.type';
+  useSocialSignUpMutation,
+  useSocialUploadImageMutataion,
+} from '@/hooks/mutations/useSocialSignUpMutation';
+import { SocialSignUpFormValues } from '@/types/social.type';
 import { toast } from 'react-toastify';
 import {
   useFeedbackQuery,
@@ -21,8 +21,9 @@ import {
 } from '@/hooks/queries/useSignUpInfoQuery';
 import SocialMbtiSelector from '@/components/page/social/SocialMbtiSelector';
 import { XMarkIcon } from '@heroicons/react/24/outline';
+import { useAuthStore } from '@/store/authStore';
 
-export default function SignUpPage() {
+export default function SocialSignUpPage() {
   const {
     register,
     setValue,
@@ -30,7 +31,7 @@ export default function SignUpPage() {
     trigger,
     watch,
     formState: { errors, dirtyFields, isValid },
-  } = useForm<SignUpFormValues>({
+  } = useForm<SocialSignUpFormValues>({
     mode: 'onChange',
     criteriaMode: 'all',
   });
@@ -43,24 +44,26 @@ export default function SignUpPage() {
   const [uploadImageUrl, setUploadImageUrl] = useState<(string | null)[]>(
     Array(6).fill(null)
   );
-  const [error, setError] = useState<string | null>(null);
   const [isImageValid, setIsImageValid] = useState(false);
-  const { mutate, isPending } = useSignUpMutation();
+  const [error, setError] = useState<string | null>(null);
 
-  //회원가입 관심사, 피드백, 이런사람이에요 state
-  const { data: interest } = useInterestsQuery();
+  const { mutate, isPending } = useSocialSignUpMutation();
+  const { mutate: uploadImage } = useSocialUploadImageMutataion();
+
+  const { data: interest, isLoading: isInterestLoading } = useInterestsQuery();
   const interestNames =
     interest?.map((el: { id: number; name: string }) => el.name) ?? [];
-  const { data: feedback } = useFeedbackQuery();
+  const { data: feedback, isLoading: isFeedbackLoading } = useFeedbackQuery();
   const feedbackNames = Array.from(
     new Set(feedback?.map((el: { id: number; name: string }) => el.name) ?? [])
   ) as string[];
-  const { data: introduce } = useIntroduceQuery();
+  const { data: introduce, isLoading: isIntroduceLoading } =
+    useIntroduceQuery();
   const introduceNames = Array.from(
     new Set(introduce?.map((el: { id: number; name: string }) => el.name) ?? [])
   ) as string[];
 
-  const { mutate: uploadImage } = useUploadImageMutataion();
+  const { socialLogin } = useAuthStore();
 
   const validateImages = useCallback(() => {
     const uploadedCount = images.filter(Boolean).length;
@@ -128,7 +131,7 @@ export default function SignUpPage() {
     });
   };
 
-  const handleCreateUserSubmit = async (data: SignUpFormValues) => {
+  const handleCreateUserSubmit = async (data: SocialSignUpFormValues) => {
     try {
       const validImageUrls = uploadImageUrl.filter(
         (url): url is string => url !== null && url !== undefined
@@ -141,7 +144,17 @@ export default function SignUpPage() {
         ...data,
         images: validImageUrls,
       };
-      mutate(payload);
+      mutate(payload, {
+        onSuccess: (response) => {
+          socialLogin({
+            id: response.userId,
+            nickname: data.nickname,
+          });
+        },
+        onError: (error) => {
+          console.error('회원가입 도중 에러 발생:', error);
+        },
+      });
     } catch (error) {
       console.error('회원가입 도중 에러 발생:', error);
     }
@@ -326,6 +339,7 @@ export default function SignUpPage() {
                     setValue={setValue}
                     trigger={trigger}
                     error={errors.interests as FieldError}
+                    isLoading={isInterestLoading}
                   />
 
                   <SocialMultiToggleButtonGroup
@@ -340,6 +354,7 @@ export default function SignUpPage() {
                     trigger={trigger}
                     error={errors.listening as FieldError}
                     gridCols="grid-cols-2"
+                    isLoading={isFeedbackLoading}
                   />
 
                   <SocialMultiToggleButtonGroup
@@ -354,6 +369,7 @@ export default function SignUpPage() {
                     trigger={trigger}
                     error={errors.selfintro as FieldError}
                     gridCols="grid-cols-2"
+                    isLoading={isIntroduceLoading}
                   />
                 </div>
               </div>

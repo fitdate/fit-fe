@@ -1,30 +1,11 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import {
-  UseFormRegister,
-  UseFormSetValue,
-  UseFormTrigger,
-  FieldError,
-} from 'react-hook-form';
 import clsx from 'clsx';
-import { SignUpFormValues } from '@/types/signUp.type';
+import { SocialMultiToggleButtonGroupProps } from '@/types/social.type';
+import Spinner from '@/components/common/Spinner';
 
-interface Props {
-  label: string;
-  name: keyof SignUpFormValues;
-  options: string[];
-  required?: boolean;
-  limit?: number;
-  min?: number;
-  register: UseFormRegister<SignUpFormValues>;
-  setValue: UseFormSetValue<SignUpFormValues>;
-  trigger: UseFormTrigger<SignUpFormValues>;
-  error?: FieldError;
-  gridCols?: string;
-}
-
-export default function MultiToggleButtonGroup({
+export default function SocialMultiToggleButtonGroup({
   label,
   name,
   options,
@@ -36,7 +17,8 @@ export default function MultiToggleButtonGroup({
   trigger,
   error,
   gridCols = 'grid-cols-3',
-}: Props) {
+  isLoading = false,
+}: SocialMultiToggleButtonGroupProps) {
   const [selected, setSelected] = useState<string[]>([]);
 
   const toggle = (item: string) => {
@@ -68,25 +50,31 @@ export default function MultiToggleButtonGroup({
         {required && <span className="text-rose-500 ml-1">*</span>}
       </label>
 
-      <div className={`grid ${gridCols} gap-2`}>
-        {options.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => toggle(item)}
-            className={clsx(
-              'px-5 py-2 rounded-full text-sm font-medium border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-violet-300/40',
-              'hover:scale-105 active:scale-95',
-              selected.includes(item)
-                ? 'bg-gradient-to-r from-violet-400 to-pink-300 text-white shadow-lg border-transparent'
-                : 'bg-white/60 text-violet-500 border-violet-200 hover:bg-violet-50'
-            )}
-            aria-pressed={selected.includes(item)}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center min-h-[100px]">
+          <Spinner size="md" color="primary" />
+        </div>
+      ) : (
+        <div className={`grid ${gridCols} gap-2`}>
+          {options.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => toggle(item)}
+              className={clsx(
+                'px-5 py-2 rounded-full text-sm font-medium border transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-violet-300/40',
+                'hover:scale-105 active:scale-95',
+                selected.includes(item)
+                  ? 'bg-gradient-to-r from-violet-400 to-pink-300 text-white shadow-lg border-transparent'
+                  : 'bg-white/60 text-violet-500 border-violet-200 hover:bg-violet-50'
+              )}
+              aria-pressed={selected.includes(item)}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
+      )}
 
       <input
         type="hidden"

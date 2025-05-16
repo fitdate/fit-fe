@@ -1,12 +1,5 @@
 import React from 'react';
-import { UseFormRegisterReturn } from 'react-hook-form';
-
-interface SocialGenderSelectorProps {
-  register: UseFormRegisterReturn;
-  required?: boolean;
-  selectedGender?: string;
-  error?: string;
-}
+import { SocialGenderSelectorProps } from '@/types/social.type';
 
 export default function SocialGenderSelector({
   register,
@@ -25,7 +18,7 @@ export default function SocialGenderSelector({
         <div className="relative grid grid-cols-2 gap-3 h-[46px] rounded-xl">
           {[
             {
-              value: 'MALE',
+              value: '남자',
               label: '남성',
               icon: (
                 <svg
@@ -44,7 +37,7 @@ export default function SocialGenderSelector({
               ),
             },
             {
-              value: 'FEMALE',
+              value: '여자',
               label: '여성',
               icon: (
                 <svg

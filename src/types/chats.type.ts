@@ -21,15 +21,6 @@ export interface ChatRoomType {
   updatedAt: string;
 }
 
-export interface ChatRoomListResponse {
-  rooms: ChatRoomType[];
-  totalCount: number;
-  currentPage: string;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-}
-
 export interface ChatRoomResponse {
   id: string;
   name: string;

@@ -6,13 +6,28 @@ export interface PartnerType {
   age: number;
   height: number;
   profileImage: string;
+  isOnline: boolean;
+  lastMessage: string | null;
+  lastMessageTime: string | null;
+  isUnread: boolean;
 }
 
 export interface ChatRoomType {
   id: string;
   name: string;
-  partner: PartnerType;
   userId: string;
+  partner: PartnerType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatRoomListResponse {
+  rooms: ChatRoomType[];
+  totalCount: number;
+  currentPage: string;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
 }
 
 export interface ChatRoomResponse {
